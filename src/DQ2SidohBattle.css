@@ -6,8 +6,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'MS Gothic', 'ＭＳ ゴシック', monospace;
+  font-family: 'MS Gothic', 'ＭＳ ゴシック', 'Courier New', monospace;
   padding: 20px;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: grayscale;
+  image-rendering: pixelated;
 }
 
 .game-board {
@@ -49,10 +52,12 @@
 
 .message-text {
   color: #fff;
-  font-size: 16px;
-  line-height: 1.7;
+  font-size: 18px;
+  line-height: 1.8;
   white-space: pre-wrap;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
+  font-weight: bold;
+  text-shadow: 1px 1px 0 #000;
 }
 
 /* パーティステータスウィンドウ（左側） */
@@ -69,9 +74,10 @@
 
 .party-member {
   color: #fff;
-  font-size: 15px;
+  font-size: 16px;
   margin-bottom: 16px;
   line-height: 1.5;
+  font-weight: bold;
 }
 
 .party-member:last-child {
@@ -90,17 +96,18 @@
 }
 
 .member-name {
-  font-weight: normal;
+  font-weight: bold;
   margin-bottom: 4px;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.1em;
 }
 
 .member-stats {
-  font-size: 14px;
+  font-size: 15px;
   display: flex;
   flex-direction: column;
   gap: 2px;
   padding-left: 8px;
+  font-weight: bold;
 }
 
 .stat-line {
@@ -142,13 +149,14 @@
   background: none;
   border: none;
   color: #fff;
-  font-size: 17px;
-  font-family: 'MS Gothic', 'ＭＳ ゴシック', monospace;
+  font-size: 18px;
+  font-family: 'MS Gothic', 'ＭＳ ゴシック', 'Courier New', monospace;
   cursor: pointer;
   text-align: left;
   padding: 6px 12px;
   position: relative;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
+  font-weight: bold;
 }
 
 .command-button:hover:not(:disabled) {
@@ -186,13 +194,14 @@
   background: none;
   border: none;
   color: #fff;
-  font-size: 17px;
-  font-family: 'MS Gothic', 'ＭＳ ゴシック', monospace;
+  font-size: 18px;
+  font-family: 'MS Gothic', 'ＭＳ ゴシック', 'Courier New', monospace;
   cursor: pointer;
   text-align: left;
   padding: 6px 12px;
   position: relative;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
+  font-weight: bold;
 }
 
 .submenu-button:hover:not(:disabled) {
@@ -216,14 +225,15 @@
   background: none;
   border: none;
   color: #fff;
-  font-size: 17px;
-  font-family: 'MS Gothic', 'ＭＳ ゴシック', monospace;
+  font-size: 18px;
+  font-family: 'MS Gothic', 'ＭＳ ゴシック', 'Courier New', monospace;
   cursor: pointer;
   text-align: left;
   padding: 6px 12px;
   display: flex;
   justify-content: space-between;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
+  font-weight: bold;
 }
 
 .spell-button:hover:not(:disabled) {
@@ -237,7 +247,7 @@
 }
 
 .spell-name {
-  font-weight: normal;
+  font-weight: bold;
 }
 
 .spell-cost {
@@ -251,10 +261,11 @@
   border: 3px solid #fff;
   padding: 14px 40px;
   font-size: 20px;
-  font-family: 'MS Gothic', 'ＭＳ ゴシック', monospace;
+  font-family: 'MS Gothic', 'ＭＳ ゴシック', 'Courier New', monospace;
   cursor: pointer;
   box-shadow: inset 0 0 0 3px #0000aa;
   letter-spacing: 0.15em;
+  font-weight: bold;
 }
 
 .start-button:hover, .restart-button:hover {
@@ -272,13 +283,14 @@
   background: none;
   border: none;
   color: #fff;
-  font-size: 17px;
-  font-family: 'MS Gothic', 'ＭＳ ゴシック', monospace;
+  font-size: 18px;
+  font-family: 'MS Gothic', 'ＭＳ ゴシック', 'Courier New', monospace;
   cursor: pointer;
   text-align: left;
   padding: 6px 12px;
   margin-top: 16px;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
+  font-weight: bold;
 }
 
 .back-button:hover:not(:disabled) {
