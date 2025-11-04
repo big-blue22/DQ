@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Skull, Swords, Shield, Sparkles } from 'lucide-react';
 import './DQ2SidohBattle.css';
 
 const DQ2SidohBattle = () => {
@@ -11,17 +10,14 @@ const DQ2SidohBattle = () => {
   const [selectedSpell, setSelectedSpell] = useState(null);
   const [animating, setAnimating] = useState(false);
   const [party, setParty] = useState([
-    { name: 'ローレシア', hp: 180, maxHp: 180, mp: 50, maxMp: 50, atk: 120, def: 80, status: 'normal' },
-    { name: 'サマルトリア', hp: 150, maxHp: 150, mp: 80, maxMp: 80, atk: 90, def: 70, status: 'normal' },
-    { name: 'ムーンブルク', hp: 100, maxHp: 100, mp: 120, maxMp: 120, atk: 60, def: 50, status: 'normal' }
+    { name: 'ローレシア', level: 44, hp: 189, maxHp: 189, mp: 31, maxMp: 31, atk: 120, def: 80, status: 'normal', canUseMagic: false },
+    { name: 'サマルトリア', level: 31, hp: 159, maxHp: 159, mp: 93, maxMp: 93, atk: 90, def: 70, status: 'normal', canUseMagic: true },
+    { name: 'ムーンブルク', level: 28, hp: 105, maxHp: 105, mp: 115, maxMp: 115, atk: 60, def: 50, status: 'normal', canUseMagic: true }
   ]);
   const [sidoh, setSidoh] = useState({ name: 'シドー', hp: 2000, maxHp: 2000, atk: 180, def: 120, status: 'normal' });
 
   const spells = {
-    0: [
-      { name: 'ベギラマ', mp: 4, type: 'attack', power: 50 },
-      { name: 'バイキルト', mp: 6, type: 'buff', effect: 'atk' }
-    ],
+    0: [], // ローレシアは呪文が使えない
     1: [
       { name: 'イオナズン', mp: 15, type: 'attack', power: 100 },
       { name: 'ベホマ', mp: 8, type: 'heal', power: 150 },
@@ -37,10 +33,25 @@ const DQ2SidohBattle = () => {
   const handleCommand = (command) => {
     if (animating) return;
     setSelectedCommand(command);
-    if (command === 'じゅもん') {
-      setGameState('selectSpell');
+    
+    if (command === 'こうげき') {
+      setGameState('selectAttackType');
+    } else if (command === 'どうぐ') {
+      executeCommand('どうぐ');
+    } else if (command === 'にげる') {
+      executeCommand('にげる');
     } else {
       executeCommand(command);
+    }
+  };
+
+  const handleAttackType = (type) => {
+    if (animating) return;
+    
+    if (type === 'ぶきで こうげき') {
+      executeCommand('たたかう');
+    } else if (type === 'じゅもん') {
+      setGameState('selectSpell');
     }
   };
 
@@ -68,6 +79,10 @@ const DQ2SidohBattle = () => {
       const actualDamage = Math.max(1, damage);
       newSidoh.hp = Math.max(0, newSidoh.hp - actualDamage);
       msg = `${char.name}の こうげき!\n${sidoh.name}に ${actualDamage}の ダメージ!`;
+    } else if (command === 'どうぐ') {
+      msg = `${char.name}は どうぐを つかった!\n\nしかし なにも おこらなかった`;
+    } else if (command === 'にげる') {
+      msg = `${char.name}は にげだした!\n\nしかし まわりこまれてしまった!`;
     } else if (command === 'じゅもん' && spell) {
       if (char.mp < spell.mp) {
         msg = 'MPが たりない!';
@@ -197,9 +212,9 @@ const DQ2SidohBattle = () => {
 
   const restartGame = () => {
     setParty([
-      { name: 'ローレシア', hp: 180, maxHp: 180, mp: 50, maxMp: 50, atk: 120, def: 80, status: 'normal' },
-      { name: 'サマルトリア', hp: 150, maxHp: 150, mp: 80, maxMp: 80, atk: 90, def: 70, status: 'normal' },
-      { name: 'ムーンブルク', hp: 100, maxHp: 100, mp: 120, maxMp: 120, atk: 60, def: 50, status: 'normal' }
+      { name: 'ローレシア', level: 44, hp: 189, maxHp: 189, mp: 31, maxMp: 31, atk: 120, def: 80, status: 'normal', canUseMagic: false },
+      { name: 'サマルトリア', level: 31, hp: 159, maxHp: 159, mp: 93, maxMp: 93, atk: 90, def: 70, status: 'normal', canUseMagic: true },
+      { name: 'ムーンブルク', level: 28, hp: 105, maxHp: 105, mp: 115, maxMp: 115, atk: 60, def: 50, status: 'normal', canUseMagic: true }
     ]);
     setSidoh({ name: 'シドー', hp: 2000, maxHp: 2000, atk: 180, def: 120, status: 'normal' });
     setCurrentCharacter(0);
@@ -212,43 +227,45 @@ const DQ2SidohBattle = () => {
   return (
     <div className="game-container">
       <div className="game-board">
-        {/* Enemy Status */}
-        <div className="enemy-status">
-          <div className="enemy-header">
-            <div className="enemy-name">
-              <Skull color="#ef4444" size={24} />
-              <span>{sidoh.name}</span>
-            </div>
-          </div>
-          <div className="hp-bar-container">
-            <div 
-              className="hp-bar"
-              style={{ width: `${(sidoh.hp / sidoh.maxHp) * 100}%` }}
-            />
-          </div>
-          <div className="hp-text">HP: {sidoh.hp} / {sidoh.maxHp}</div>
-        </div>
-
-        {/* Message Box */}
-        <div className="message-box">
-          <pre className="message-text">{message}</pre>
-        </div>
-
-        {/* Party Status */}
-        <div className="party-container">
+        {/* Party Status Window (左上) */}
+        <div className="party-window">
           {party.map((char, idx) => (
             <div 
               key={idx} 
-              className={`party-member ${currentCharacter === idx && gameState === 'command' ? 'active' : ''} ${char.status === 'dead' ? 'dead' : ''}`}
+              className={`party-member ${currentCharacter === idx && (gameState === 'command' || gameState === 'selectAttackType' || gameState === 'selectSpell') ? 'active' : ''} ${char.status === 'dead' ? 'dead' : ''}`}
             >
               <div className="member-name">{char.name}</div>
               <div className="member-stats">
-                <div>HP: {char.hp}/{char.maxHp}</div>
-                <div>MP: {char.mp}/{char.maxMp}</div>
+                <div className="stat-line">
+                  <span>Ｌ</span>
+                  <span>{char.level}</span>
+                </div>
+                <div className="stat-line">
+                  <span>Ｈ</span>
+                  <span>{char.hp}</span>
+                </div>
+                <div className="stat-line">
+                  <span>Ｍ</span>
+                  <span>{char.mp}</span>
+                </div>
                 {char.status === 'dead' && <div className="dead-status">しぼう</div>}
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Enemy Area (中央) */}
+        <div className="enemy-area">
+          <img 
+            src="/unnamed.png" 
+            alt="シドー" 
+            className="enemy-sprite"
+          />
+        </div>
+
+        {/* Message Box (下部) */}
+        <div className="message-box">
+          <div className="message-text">{message}</div>
         </div>
 
         {/* Commands */}
@@ -261,54 +278,92 @@ const DQ2SidohBattle = () => {
         )}
 
         {gameState === 'command' && (
-          <div className="command-grid">
-            <button
-              onClick={() => handleCommand('たたかう')}
-              disabled={animating}
-              className="command-button"
-            >
-              <Swords size={20} />
-              たたかう
-            </button>
-            <button
-              onClick={() => handleCommand('じゅもん')}
-              disabled={animating}
-              className="command-button"
-            >
-              <Sparkles size={20} />
-              じゅもん
-            </button>
-            <button
-              onClick={() => handleCommand('ぼうぎょ')}
-              disabled={animating}
-              className="command-button"
-            >
-              <Shield size={20} />
-              ぼうぎょ
-            </button>
+          <div className="command-window">
+            <div className="command-grid">
+              <button
+                onClick={() => handleCommand('こうげき')}
+                disabled={animating}
+                className="command-button"
+              >
+                こうげき
+              </button>
+              <button
+                onClick={() => handleCommand('ぼうぎょ')}
+                disabled={animating}
+                className="command-button"
+              >
+                ぼうぎょ
+              </button>
+              <button
+                onClick={() => handleCommand('どうぐ')}
+                disabled={animating}
+                className="command-button"
+              >
+                どうぐ
+              </button>
+              <button
+                onClick={() => handleCommand('にげる')}
+                disabled={animating}
+                className="command-button"
+              >
+                にげる
+              </button>
+            </div>
+          </div>
+        )}
+
+        {gameState === 'selectAttackType' && (
+          <div className="submenu-window">
+            <div className="submenu-list">
+              <button
+                onClick={() => handleAttackType('ぶきで こうげき')}
+                disabled={animating}
+                className="submenu-button"
+              >
+                ぶきで こうげき
+              </button>
+              {party[currentCharacter].canUseMagic && (
+                <button
+                  onClick={() => handleAttackType('じゅもん')}
+                  disabled={animating}
+                  className="submenu-button"
+                >
+                  じゅもん
+                </button>
+              )}
+              <button
+                onClick={() => setGameState('command')}
+                disabled={animating}
+                className="back-button"
+              >
+                もどる
+              </button>
+            </div>
           </div>
         )}
 
         {gameState === 'selectSpell' && (
-          <div className="spell-container">
-            {spells[currentCharacter].map((spell, idx) => (
+          <div className="submenu-window">
+            <div className="spell-list">
+              {spells[currentCharacter].map((spell, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleSpell(spell)}
+                  disabled={animating || party[currentCharacter].mp < spell.mp}
+                  className="spell-button"
+                >
+                  <span className="spell-name">{spell.name}</span>
+                  <span className="spell-cost">MP {spell.mp}</span>
+                </button>
+              ))}
               <button
-                key={idx}
-                onClick={() => handleSpell(spell)}
-                disabled={animating || party[currentCharacter].mp < spell.mp}
-                className="spell-button"
+                onClick={() => setGameState('selectAttackType')}
+                disabled={animating}
+                className="back-button"
               >
-                <span className="spell-name">{spell.name}</span>
-                <span>MP: {spell.mp}</span>
+                もどる
               </button>
-            ))}
-            <button
-              onClick={() => setGameState('command')}
-              disabled={animating}
-              className="back-button"
-            >
-              もどる
-            </button>
+            </div>
           </div>
         )}
 
