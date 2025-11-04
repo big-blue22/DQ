@@ -257,7 +257,7 @@ const DQ2SidohBattle = () => {
         {/* Enemy Area (中央) */}
         <div className="enemy-area">
           <img 
-            src="/unnamed.png" 
+            src={`${import.meta.env.BASE_URL}unnamed.png`}
             alt="シドー" 
             className="enemy-sprite"
             onError={(e) => {
