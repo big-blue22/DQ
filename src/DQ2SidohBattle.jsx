@@ -260,6 +260,9 @@ const DQ2SidohBattle = () => {
             src="/unnamed.png" 
             alt="シドー" 
             className="enemy-sprite"
+            onError={(e) => {
+              console.error('画像の読み込みに失敗しました:', e);
+            }}
           />
         </div>
 
