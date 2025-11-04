@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(180deg, #000080 0%, #000040 100%);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'MS Gothic', monospace;
+  color: white;
+}
+
+#root {
+  width: 100%;
+}
