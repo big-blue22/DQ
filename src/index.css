@@ -1,6 +1,8 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;
@@ -10,7 +12,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  font-family: 'MS Gothic', monospace;
+  font-family: 'MS Gothic', 'Courier New', monospace;
   color: white;
 }
 

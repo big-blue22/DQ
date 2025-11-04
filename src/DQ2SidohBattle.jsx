@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Skull, Swords, Shield, Sparkles } from 'lucide-react';
+import './DQ2SidohBattle.css';
 
 const DQ2SidohBattle = () => {
   const [gameState, setGameState] = useState('intro');
@@ -209,59 +210,115 @@ const DQ2SidohBattle = () => {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-4 font-mono border-4 border-white">
-      <div className="border-2 border-white p-2 mb-4 text-center">
-        <p>{sidoh.name} HP: {sidoh.hp} / {sidoh.maxHp}</p>
-      </div>
+    <div className="game-container">
+      <div className="game-board">
+        {/* Enemy Status */}
+        <div className="enemy-status">
+          <div className="enemy-header">
+            <div className="enemy-name">
+              <Skull color="#ef4444" size={24} />
+              <span>{sidoh.name}</span>
+            </div>
+          </div>
+          <div className="hp-bar-container">
+            <div 
+              className="hp-bar"
+              style={{ width: `${(sidoh.hp / sidoh.maxHp) * 100}%` }}
+            />
+          </div>
+          <div className="hp-text">HP: {sidoh.hp} / {sidoh.maxHp}</div>
+        </div>
 
-      <div className="border-2 border-white p-4 mb-4 h-32 whitespace-pre-wrap">
-        {message}
-      </div>
+        {/* Message Box */}
+        <div className="message-box">
+          <pre className="message-text">{message}</pre>
+        </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="border-2 border-white p-4">
-          <h2 className="text-lg mb-2">パーティーステータス</h2>
+        {/* Party Status */}
+        <div className="party-container">
           {party.map((char, idx) => (
-            <div key={idx} className={char.status === 'dead' ? 'opacity-50' : ''}>
-              <p>{char.name}</p>
-              <p>HP: {char.hp}/{char.maxHp} MP: {char.mp}/{char.maxMp}</p>
-              {char.status === 'dead' && <p className="text-red-500">(しぼう)</p>}
+            <div 
+              key={idx} 
+              className={`party-member ${currentCharacter === idx && gameState === 'command' ? 'active' : ''} ${char.status === 'dead' ? 'dead' : ''}`}
+            >
+              <div className="member-name">{char.name}</div>
+              <div className="member-stats">
+                <div>HP: {char.hp}/{char.maxHp}</div>
+                <div>MP: {char.mp}/{char.maxMp}</div>
+                {char.status === 'dead' && <div className="dead-status">しぼう</div>}
+              </div>
             </div>
           ))}
         </div>
 
-        <div className="border-2 border-white p-4">
-          {gameState === 'intro' && (
-            <button onClick={startGame} className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 border border-blue-700 rounded">
+        {/* Commands */}
+        {gameState === 'intro' && (
+          <div className="command-container">
+            <button onClick={startGame} className="start-button">
               たたかう
             </button>
-          )}
+          </div>
+        )}
 
-          {gameState === 'command' && (
-            <div className="grid grid-cols-2 gap-2">
-              <button onClick={() => handleCommand('たたかう')} disabled={animating} className="bg-white text-black py-2 px-4 border-2 border-black hover:bg-gray-200 disabled:opacity-50">たたかう</button>
-              <button onClick={() => handleCommand('じゅもん')} disabled={animating} className="bg-white text-black py-2 px-4 border-2 border-black hover:bg-gray-200 disabled:opacity-50">じゅもん</button>
-              <button onClick={() => handleCommand('ぼうぎょ')} disabled={animating} className="bg-white text-black py-2 px-4 border-2 border-black hover:bg-gray-200 disabled:opacity-50">ぼうぎょ</button>
-            </div>
-          )}
+        {gameState === 'command' && (
+          <div className="command-grid">
+            <button
+              onClick={() => handleCommand('たたかう')}
+              disabled={animating}
+              className="command-button"
+            >
+              <Swords size={20} />
+              たたかう
+            </button>
+            <button
+              onClick={() => handleCommand('じゅもん')}
+              disabled={animating}
+              className="command-button"
+            >
+              <Sparkles size={20} />
+              じゅもん
+            </button>
+            <button
+              onClick={() => handleCommand('ぼうぎょ')}
+              disabled={animating}
+              className="command-button"
+            >
+              <Shield size={20} />
+              ぼうぎょ
+            </button>
+          </div>
+        )}
 
-          {gameState === 'selectSpell' && (
-            <div>
-              {spells[currentCharacter].map((spell, idx) => (
-                <button key={idx} onClick={() => handleSpell(spell)} disabled={animating || party[currentCharacter].mp < spell.mp} className="w-full text-left bg-white text-black py-1 px-2 mb-1 border-2 border-black hover:bg-gray-200 disabled:opacity-50">
-                  {spell.name} (MP: {spell.mp})
-                </button>
-              ))}
-              <button onClick={() => setGameState('command')} disabled={animating} className="w-full mt-2 bg-gray-300 text-black py-1 px-2 border-2 border-black hover:bg-gray-400">もどる</button>
-            </div>
-          )}
+        {gameState === 'selectSpell' && (
+          <div className="spell-container">
+            {spells[currentCharacter].map((spell, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleSpell(spell)}
+                disabled={animating || party[currentCharacter].mp < spell.mp}
+                className="spell-button"
+              >
+                <span className="spell-name">{spell.name}</span>
+                <span>MP: {spell.mp}</span>
+              </button>
+            ))}
+            <button
+              onClick={() => setGameState('command')}
+              disabled={animating}
+              className="back-button"
+            >
+              もどる
+            </button>
+          </div>
+        )}
 
-          {(gameState === 'victory' || gameState === 'gameover') && (
-            <button onClick={restartGame} className="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 border border-green-700 rounded">
+        {(gameState === 'victory' || gameState === 'gameover') && (
+          <div className="command-container">
+            <button onClick={restartGame} className="restart-button">
               もういちど
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

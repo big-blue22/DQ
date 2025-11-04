@@ -1,0 +1,215 @@
+.game-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'MS Gothic', 'Courier New', monospace;
+}
+
+.game-board {
+  background-color: #1e3a8a;
+  border: 4px solid white;
+  padding: 24px;
+}
+
+.enemy-status {
+  background-color: black;
+  color: white;
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 2px solid white;
+}
+
+.enemy-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.enemy-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 20px;
+}
+
+.hp-bar-container {
+  width: 100%;
+  background-color: #374151;
+  height: 16px;
+  border: 1px solid white;
+}
+
+.hp-bar {
+  background-color: #10b981;
+  height: 100%;
+  transition: width 0.5s;
+}
+
+.hp-text {
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.message-box {
+  background-color: black;
+  color: white;
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 2px solid white;
+  min-height: 96px;
+}
+
+.message-text {
+  white-space: pre-wrap;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.party-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.party-member {
+  background-color: black;
+  color: white;
+  padding: 12px;
+  border: 2px solid white;
+}
+
+.party-member.active {
+  border-color: #fbbf24;
+}
+
+.party-member.dead {
+  opacity: 0.5;
+}
+
+.member-name {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.member-stats {
+  font-size: 12px;
+}
+
+.dead-status {
+  color: #ef4444;
+}
+
+.command-container {
+  display: flex;
+  justify-content: center;
+}
+
+.start-button {
+  background-color: white;
+  color: black;
+  padding: 12px 32px;
+  font-size: 18px;
+  font-weight: bold;
+  border: 2px solid black;
+  cursor: pointer;
+  font-family: 'MS Gothic', 'Courier New', monospace;
+}
+
+.start-button:hover {
+  background-color: #e5e5e5;
+}
+
+.command-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.command-button {
+  background-color: white;
+  color: black;
+  padding: 12px 16px;
+  font-size: 16px;
+  font-weight: bold;
+  border: 2px solid black;
+  cursor: pointer;
+  font-family: 'MS Gothic', 'Courier New', monospace;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.command-button:hover:not(:disabled) {
+  background-color: #e5e5e5;
+}
+
+.command-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.spell-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.spell-button {
+  width: 100%;
+  background-color: white;
+  color: black;
+  padding: 8px 16px;
+  border: 2px solid black;
+  cursor: pointer;
+  font-family: 'MS Gothic', 'Courier New', monospace;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+}
+
+.spell-button:hover:not(:disabled) {
+  background-color: #e5e5e5;
+}
+
+.spell-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.spell-name {
+  font-weight: bold;
+}
+
+.back-button {
+  width: 100%;
+  margin-top: 8px;
+  background-color: #d1d5db;
+  color: black;
+  padding: 8px 16px;
+  border: 2px solid black;
+  cursor: pointer;
+  font-family: 'MS Gothic', 'Courier New', monospace;
+}
+
+.back-button:hover:not(:disabled) {
+  background-color: #9ca3af;
+}
+
+.restart-button {
+  background-color: white;
+  color: black;
+  padding: 12px 32px;
+  font-size: 18px;
+  font-weight: bold;
+  border: 2px solid black;
+  cursor: pointer;
+  font-family: 'MS Gothic', 'Courier New', monospace;
+}
+
+.restart-button:hover {
+  background-color: #e5e5e5;
+}
