@@ -265,14 +265,7 @@ const DQ2SidohBattle = () => {
 
         {/* Enemy Area (中央) */}
         <div className="enemy-area">
-          <img 
-            src={`${import.meta.env.BASE_URL}unnamed.png`}
-            alt="シドー" 
-            className="enemy-sprite"
-            onError={(e) => {
-              console.error('画像の読み込みに失敗しました:', e);
-            }}
-          />
+          <div className="enemy-placeholder">シドー</div>
         </div>
 
         {/* Message Box (下部) */}
