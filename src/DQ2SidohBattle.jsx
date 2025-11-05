@@ -33,8 +33,8 @@ const DQ2SidohBattle = () => {
   const handleCommand = (command) => {
     if (animating) return;
     setSelectedCommand(command);
-    
-    if (command === 'こうげき') {
+
+    if (command === 'たたかう') {
       setGameState('selectAttackType');
     } else if (command === 'どうぐ') {
       executeCommand('どうぐ');
@@ -284,11 +284,18 @@ const DQ2SidohBattle = () => {
           <div className="command-window">
             <div className="command-grid">
               <button
-                onClick={() => handleCommand('こうげき')}
+                onClick={() => handleCommand('たたかう')}
                 disabled={animating}
                 className="command-button"
               >
-                こうげき
+                たたかう
+              </button>
+              <button
+                onClick={() => handleCommand('にげる')}
+                disabled={animating}
+                className="command-button"
+              >
+                にげる
               </button>
               <button
                 onClick={() => handleCommand('ぼうぎょ')}
@@ -303,13 +310,6 @@ const DQ2SidohBattle = () => {
                 className="command-button"
               >
                 どうぐ
-              </button>
-              <button
-                onClick={() => handleCommand('にげる')}
-                disabled={animating}
-                className="command-button"
-              >
-                にげる
               </button>
             </div>
           </div>
