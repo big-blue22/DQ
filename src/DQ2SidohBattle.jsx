@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './DQ2SidohBattle.css';
+import { useBackgroundAudio } from './hooks/useBackgroundAudio';
 
 const DQ2SidohBattle = () => {
   const [gameState, setGameState] = useState('intro');
@@ -15,6 +16,12 @@ const DQ2SidohBattle = () => {
     { name: 'ムーンブルク', level: 28, hp: 105, maxHp: 105, mp: 115, maxMp: 115, atk: 60, def: 50, status: 'normal', canUseMagic: true }
   ]);
   const [sidoh, setSidoh] = useState({ name: 'シドー', hp: 2000, maxHp: 2000, atk: 180, def: 120, status: 'normal' });
+
+  // バックグラウンド音声再生（ループ）
+  const { play, pause, isPlaying } = useBackgroundAudio(
+    `${import.meta.env.BASE_URL}無題の動画.mp4`,
+    { autoPlay: false, loop: true, volume: 0.3 }
+  );
 
   const spells = {
     0: [], // ローレシアは呪文が使えない
@@ -208,6 +215,7 @@ const DQ2SidohBattle = () => {
   const startGame = () => {
     setGameState('command');
     setMessage('');
+    play(); // バックグラウンド音声再生開始
   };
 
   const restartGame = () => {
@@ -222,6 +230,7 @@ const DQ2SidohBattle = () => {
     setGameState('intro');
     setMessage('はかいしん シドーが あらわれた!');
     setAnimating(false);
+    pause(); // 音声を一時停止してリセット
   };
 
   return (
