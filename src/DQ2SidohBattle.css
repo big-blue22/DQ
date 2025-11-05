@@ -32,6 +32,7 @@
   position: relative;
   background-color: #000;
   min-height: 250px;
+  z-index: 20;
 }
 
 .enemy-sprite {
