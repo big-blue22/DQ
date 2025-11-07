@@ -17,7 +17,7 @@
   width: 100%;
   max-width: 700px;
   min-height: 500px;
-  background-color: #000;
+  background-color: transparent;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -30,9 +30,16 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  background-color: #000;
+  background-color: transparent;
   min-height: 250px;
   z-index: 20;
+}
+
+.enemy-placeholder {
+  color: #fff;
+  font-size: 20px;
+  font-weight: normal;
+  letter-spacing: 0.1em;
 }
 
 .enemy-sprite {
