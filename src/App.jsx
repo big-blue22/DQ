@@ -1,22 +1,11 @@
 import React from 'react';
 import DQ2SidohBattle from './DQ2SidohBattle';
 import './index.css';
-import backgroundImage from './assets/background.png';
+import './App.css';
 
 function App() {
   return (
-    <div 
-      className="App"
-      style={{
-        backgroundImage: `url(${backgroundImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center center',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed',
-        minHeight: '100vh',
-        width: '100%'
-      }}
-    >
+    <div className="App">
       <DQ2SidohBattle />
     </div>
   );
