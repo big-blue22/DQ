@@ -268,117 +268,121 @@ const DQ2SidohBattle = () => {
           <div className="enemy-placeholder">シドー</div>
         </div>
 
-        {/* Message Box (下部) */}
-        <div className="message-box">
-          <div className="message-text">{message}</div>
+        <div className="battle-footer">
+          <div className="footer-command-area">
+            {gameState === 'intro' && (
+              <div className="command-container">
+                <button onClick={startGame} className="start-button">
+                  たたかう
+                </button>
+              </div>
+            )}
+
+            {gameState === 'command' && (
+              <div className="command-window">
+                <div className="command-grid">
+                  <button
+                    onClick={() => handleCommand('たたかう')}
+                    disabled={animating}
+                    className="command-button"
+                  >
+                    たたかう
+                  </button>
+                  <button
+                    onClick={() => handleCommand('にげる')}
+                    disabled={animating}
+                    className="command-button"
+                  >
+                    にげる
+                  </button>
+                  <button
+                    onClick={() => handleCommand('ぼうぎょ')}
+                    disabled={animating}
+                    className="command-button"
+                  >
+                    ぼうぎょ
+                  </button>
+                  <button
+                    onClick={() => handleCommand('どうぐ')}
+                    disabled={animating}
+                    className="command-button"
+                  >
+                    どうぐ
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {gameState === 'selectAttackType' && (
+              <div className="submenu-window">
+                <div className="submenu-list">
+                  <button
+                    onClick={() => handleAttackType('ぶきで こうげき')}
+                    disabled={animating}
+                    className="submenu-button"
+                  >
+                    ぶきで こうげき
+                  </button>
+                  {party[currentCharacter].canUseMagic && (
+                    <button
+                      onClick={() => handleAttackType('じゅもん')}
+                      disabled={animating}
+                      className="submenu-button"
+                    >
+                      じゅもん
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setGameState('command')}
+                    disabled={animating}
+                    className="back-button"
+                  >
+                    もどる
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {gameState === 'selectSpell' && (
+              <div className="submenu-window">
+                <div className="spell-list">
+                  {spells[currentCharacter].map((spell, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleSpell(spell)}
+                      disabled={animating || party[currentCharacter].mp < spell.mp}
+                      className="spell-button"
+                    >
+                      <span className="spell-name">{spell.name}</span>
+                      <span className="spell-cost">MP {spell.mp}</span>
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setGameState('selectAttackType')}
+                    disabled={animating}
+                    className="back-button"
+                  >
+                    もどる
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {(gameState === 'victory' || gameState === 'gameover') && (
+              <div className="command-container">
+                <button onClick={restartGame} className="restart-button">
+                  もういちど
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="footer-message-area">
+            <div className="message-box">
+              <div className="message-text">{message}</div>
+            </div>
+          </div>
         </div>
-
-        {/* Commands */}
-        {gameState === 'intro' && (
-          <div className="command-container">
-            <button onClick={startGame} className="start-button">
-              たたかう
-            </button>
-          </div>
-        )}
-
-        {gameState === 'command' && (
-          <div className="command-window">
-            <div className="command-grid">
-              <button
-                onClick={() => handleCommand('たたかう')}
-                disabled={animating}
-                className="command-button"
-              >
-                たたかう
-              </button>
-              <button
-                onClick={() => handleCommand('にげる')}
-                disabled={animating}
-                className="command-button"
-              >
-                にげる
-              </button>
-              <button
-                onClick={() => handleCommand('ぼうぎょ')}
-                disabled={animating}
-                className="command-button"
-              >
-                ぼうぎょ
-              </button>
-              <button
-                onClick={() => handleCommand('どうぐ')}
-                disabled={animating}
-                className="command-button"
-              >
-                どうぐ
-              </button>
-            </div>
-          </div>
-        )}
-
-        {gameState === 'selectAttackType' && (
-          <div className="submenu-window">
-            <div className="submenu-list">
-              <button
-                onClick={() => handleAttackType('ぶきで こうげき')}
-                disabled={animating}
-                className="submenu-button"
-              >
-                ぶきで こうげき
-              </button>
-              {party[currentCharacter].canUseMagic && (
-                <button
-                  onClick={() => handleAttackType('じゅもん')}
-                  disabled={animating}
-                  className="submenu-button"
-                >
-                  じゅもん
-                </button>
-              )}
-              <button
-                onClick={() => setGameState('command')}
-                disabled={animating}
-                className="back-button"
-              >
-                もどる
-              </button>
-            </div>
-          </div>
-        )}
-
-        {gameState === 'selectSpell' && (
-          <div className="submenu-window">
-            <div className="spell-list">
-              {spells[currentCharacter].map((spell, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleSpell(spell)}
-                  disabled={animating || party[currentCharacter].mp < spell.mp}
-                  className="spell-button"
-                >
-                  <span className="spell-name">{spell.name}</span>
-                  <span className="spell-cost">MP {spell.mp}</span>
-                </button>
-              ))}
-              <button
-                onClick={() => setGameState('selectAttackType')}
-                disabled={animating}
-                className="back-button"
-              >
-                もどる
-              </button>
-            </div>
-          </div>
-        )}
-
-        {(gameState === 'victory' || gameState === 'gameover') && (
-          <div className="command-container">
-            <button onClick={restartGame} className="restart-button">
-              もういちど
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

@@ -52,14 +52,42 @@
   object-fit: contain;
 }
 
+/* バトルフッター (下部レイアウト) */
+.battle-footer {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 16px 16px 16px;
+  gap: 16px;
+  box-sizing: border-box;
+  margin-top: auto;
+}
+
+.footer-command-area {
+  width: 240px;
+  min-width: 240px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.footer-message-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
 /* メッセージボックス */
 .message-box {
   background-color: #000;
   border: 3px solid #fff;
   padding: 14px 18px;
-  margin: 0 16px 16px 16px;
-  min-height: 85px;
+  min-height: 140px;
   box-shadow: inset 0 0 0 3px #000;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .message-text {
@@ -148,10 +176,11 @@
 .command-window {
   background-color: #000;
   border: 3px solid #fff;
-  margin: 0 auto 12px auto;
   padding: 14px 20px;
   box-shadow: inset 0 0 0 3px #000;
-  max-width: 280px;
+  width: 100%;
+  box-sizing: border-box;
+  height: 100%;
 }
 
 .command-grid {
@@ -194,10 +223,11 @@
 .submenu-window {
   background-color: #000;
   border: 3px solid #fff;
-  margin: 0 auto 12px auto;
   padding: 14px 20px;
   box-shadow: inset 0 0 0 3px #000;
-  max-width: 280px;
+  width: 100%;
+  box-sizing: border-box;
+  height: 100%;
 }
 
 .submenu-list {
@@ -289,9 +319,7 @@
 }
 
 .command-container {
-  position: absolute;
-  bottom: 24px;
-  left: 24px;
+  width: 100%;
 }
 
 /* 戻るボタン */
