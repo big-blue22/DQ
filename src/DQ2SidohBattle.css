@@ -42,24 +42,20 @@
   letter-spacing: 0.1em;
 }
 
-/* メッセージボックス & コマンドエリアのコンテナ */
-.bottom-panel {
-  display: flex;
-  width: 100%;
-  padding: 0 16px 16px 16px;
-  gap: 16px;
-  box-sizing: border-box;
-  align-items: stretch;
-  min-height: 150px; /* 固定高さで高さを揃える */
-}
-
-/* メッセージボックス */
+/* メッセージボックス（固定配置） */
 .message-box {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  max-width: 800px;
   background-color: #000;
   border: 3px solid #fff;
   padding: 14px 18px;
   box-shadow: inset 0 0 0 3px #000;
   box-sizing: border-box;
+  z-index: 100;
 }
 
 .message-text {
@@ -71,16 +67,16 @@
   font-weight: normal;
 }
 
-/* パーティステータスウィンドウ（左上） */
+/* パーティステータスウィンドウ（右下） */
 .party-window {
-  position: absolute;
-  left: 16px;
-  top: 16px;
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
   background-color: #000;
   border: 3px solid #fff;
   padding: 8px 12px;
   box-shadow: inset 0 0 0 3px #000;
-  z-index: 30;
+  z-index: 100;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -144,21 +140,13 @@
   font-size: 12px;
 }
 
-/* Split Mode Styles */
-.bottom-panel.mode-split .command-section {
-  flex: 0 0 180px; /* 左側の固定幅 */
-  display: flex;
-  flex-direction: column;
-}
-
-.bottom-panel.mode-split .message-box {
-  flex: 1; /* 残りの幅を占有 */
-}
-
-/* Full Mode Styles */
-.bottom-panel.mode-full .message-box {
-  width: 100%;
-  flex: 1;
+/* コマンドセクション（左下固定） */
+.command-section {
+  position: fixed;
+  left: 24px;
+  bottom: 24px;
+  width: 200px; /* 固定幅 */
+  z-index: 100;
 }
 
 /* コマンドウィンドウ共通スタイル */
@@ -169,7 +157,6 @@
   padding: 14px 20px;
   box-shadow: inset 0 0 0 3px #000;
   width: 100%;
-  height: 100%;
   box-sizing: border-box;
 }
 
