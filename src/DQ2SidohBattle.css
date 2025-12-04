@@ -42,14 +42,15 @@
   letter-spacing: 0.1em;
 }
 
-.enemy-sprite {
-  max-width: 180px;
-  max-height: 180px;
-  width: auto;
-  height: auto;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
-  object-fit: contain;
+/* メッセージボックス & コマンドエリアのコンテナ */
+.bottom-panel {
+  display: flex;
+  width: 100%;
+  padding: 0 16px 16px 16px;
+  gap: 16px;
+  box-sizing: border-box;
+  align-items: stretch;
+  min-height: 150px; /* 固定高さで高さを揃える */
 }
 
 /* メッセージボックス */
@@ -57,9 +58,8 @@
   background-color: #000;
   border: 3px solid #fff;
   padding: 14px 18px;
-  margin: 0 16px 16px 16px;
-  min-height: 85px;
   box-shadow: inset 0 0 0 3px #000;
+  box-sizing: border-box;
 }
 
 .message-text {
@@ -144,23 +144,47 @@
   font-size: 12px;
 }
 
-/* コマンドウィンドウ（下部） */
-.command-window {
-  background-color: #000;
-  border: 3px solid #fff;
-  margin: 0 auto 12px auto;
-  padding: 14px 20px;
-  box-shadow: inset 0 0 0 3px #000;
-  max-width: 280px;
+/* Split Mode Styles */
+.bottom-panel.mode-split .command-section {
+  flex: 0 0 180px; /* 左側の固定幅 */
+  display: flex;
+  flex-direction: column;
 }
 
-.command-grid {
+.bottom-panel.mode-split .message-box {
+  flex: 1; /* 残りの幅を占有 */
+}
+
+/* Full Mode Styles */
+.bottom-panel.mode-full .message-box {
+  width: 100%;
+  flex: 1;
+}
+
+/* コマンドウィンドウ共通スタイル */
+.command-window,
+.submenu-window {
+  background-color: #000;
+  border: 3px solid #fff;
+  padding: 14px 20px;
+  box-shadow: inset 0 0 0 3px #000;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.command-grid,
+.submenu-list,
+.spell-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.command-button {
+.command-button,
+.submenu-button,
+.spell-button,
+.back-button {
   background: none;
   border: none;
   color: #fff;
@@ -172,14 +196,21 @@
   position: relative;
   letter-spacing: 0.08em;
   font-weight: normal;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.command-button:hover:not(:disabled) {
+.command-button:hover:not(:disabled),
+.submenu-button:hover:not(:disabled),
+.spell-button:hover:not(:disabled),
+.back-button:hover:not(:disabled) {
   background-color: rgba(255, 255, 255, 0.15);
   border-radius: 2px;
 }
 
-.command-button:disabled {
+.command-button:disabled,
+.submenu-button:disabled,
+.spell-button:disabled {
   opacity: 0.3;
   cursor: not-allowed;
 }
@@ -190,76 +221,9 @@
   left: -12px;
 }
 
-/* サブメニュー（こうげきの分岐） */
-.submenu-window {
-  background-color: #000;
-  border: 3px solid #fff;
-  margin: 0 auto 12px auto;
-  padding: 14px 20px;
-  box-shadow: inset 0 0 0 3px #000;
-  max-width: 280px;
-}
-
-.submenu-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.submenu-button {
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 17px;
-  font-family: 'DotGothic16', 'MS Gothic', 'ＭＳ ゴシック', monospace;
-  cursor: pointer;
-  text-align: left;
-  padding: 6px 12px;
-  position: relative;
-  letter-spacing: 0.08em;
-  font-weight: normal;
-}
-
-.submenu-button:hover:not(:disabled) {
-  background-color: rgba(255, 255, 255, 0.15);
-  border-radius: 2px;
-}
-
-.submenu-button:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-/* 呪文選択リスト */
-.spell-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
 .spell-button {
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 17px;
-  font-family: 'DotGothic16', 'MS Gothic', 'ＭＳ ゴシック', monospace;
-  cursor: pointer;
-  text-align: left;
-  padding: 6px 12px;
   display: flex;
   justify-content: space-between;
-  letter-spacing: 0.08em;
-  font-weight: normal;
-}
-
-.spell-button:hover:not(:disabled) {
-  background-color: rgba(255, 255, 255, 0.15);
-  border-radius: 2px;
-}
-
-.spell-button:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
 }
 
 .spell-name {
@@ -268,48 +232,4 @@
 
 .spell-cost {
   margin-left: 16px;
-}
-
-/* スタート・リスタートボタン */
-.start-button, .restart-button {
-  background-color: #000;
-  color: #fff;
-  border: 3px solid #fff;
-  padding: 14px 40px;
-  font-size: 18px;
-  font-family: 'DotGothic16', 'MS Gothic', 'ＭＳ ゴシック', monospace;
-  cursor: pointer;
-  box-shadow: inset 0 0 0 3px #000;
-  letter-spacing: 0.1em;
-  font-weight: normal;
-}
-
-.start-button:hover, .restart-button:hover {
-  background-color: #222;
-}
-
-.command-container {
-  position: absolute;
-  bottom: 24px;
-  left: 24px;
-}
-
-/* 戻るボタン */
-.back-button {
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 17px;
-  font-family: 'DotGothic16', 'MS Gothic', 'ＭＳ ゴシック', monospace;
-  cursor: pointer;
-  text-align: left;
-  padding: 6px 12px;
-  margin-top: 16px;
-  letter-spacing: 0.08em;
-  font-weight: normal;
-}
-
-.back-button:hover:not(:disabled) {
-  background-color: rgba(255, 255, 255, 0.15);
-  border-radius: 2px;
 }
