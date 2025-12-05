@@ -7,7 +7,7 @@
   align-items: center;
   justify-content: center;
   font-family: 'DotGothic16', 'MS Gothic', 'ＭＳ ゴシック', monospace;
-  padding: 20px;
+  padding: 0;
   -webkit-font-smoothing: none;
   -moz-osx-font-smoothing: grayscale;
   image-rendering: pixelated;
@@ -46,7 +46,7 @@
 .bottom-panel {
   display: flex;
   width: 100%;
-  padding: 0 16px 16px 16px;
+  padding: 0 4px 4px 4px;
   gap: 16px;
   box-sizing: border-box;
   align-items: stretch;
@@ -74,8 +74,8 @@
 /* パーティステータスウィンドウ（左上） */
 .party-window {
   position: absolute;
-  left: 16px;
-  top: 16px;
+  left: 4px;
+  top: 4px;
   background-color: #000;
   border: 3px solid #fff;
   padding: 8px 12px;
