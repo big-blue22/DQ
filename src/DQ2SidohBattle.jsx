@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './DQ2SidohBattle.css';
 import { useBackgroundAudio } from './hooks/useBackgroundAudio';
+import sidohImg from './assets/sidoh.png';
 
 const DQ2SidohBattle = () => {
   const [gameState, setGameState] = useState('intro');
@@ -267,7 +268,7 @@ const DQ2SidohBattle = () => {
 
         {/* Enemy Area (中央) */}
         <div className="enemy-area">
-          <div className="enemy-placeholder">シドー</div>
+          <img src={sidohImg} alt="シドー" className="enemy-image" />
         </div>
 
         {/* Bottom Panel (Command & Message) */}
