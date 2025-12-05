@@ -1,4 +1,4 @@
-/* DQ2レトロスタイル */
+/* DQ2レトロスタイル - Layout Update Final v4 */
 .game-container {
   width: 100%;
   min-height: 100vh;
@@ -15,8 +15,7 @@
 
 .game-board {
   width: 100%;
-  max-width: 700px;
-  min-height: 500px;
+  height: 100%;
   background-color: transparent;
   position: relative;
   display: flex;
@@ -29,10 +28,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   background-color: transparent;
-  min-height: 250px;
   z-index: 20;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
 .enemy-placeholder {
@@ -44,22 +48,23 @@
 
 /* メッセージボックス & コマンドエリアのコンテナ */
 .bottom-panel {
-  display: flex;
-  width: 100%;
-  padding: 0 16px 16px 16px;
-  gap: 16px;
-  box-sizing: border-box;
-  align-items: stretch;
-  min-height: 150px; /* 固定高さで高さを揃える */
+  /* No longer managing layout flow, just a wrapper */
 }
 
 /* メッセージボックス */
 .message-box {
+  position: fixed;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  max-width: 90%;
   background-color: #000;
   border: 3px solid #fff;
   padding: 14px 18px;
   box-shadow: inset 0 0 0 3px #000;
   box-sizing: border-box;
+  z-index: 40;
 }
 
 .message-text {
@@ -73,9 +78,9 @@
 
 /* パーティステータスウィンドウ（左上） */
 .party-window {
-  position: absolute;
-  left: 16px;
-  top: 16px;
+  position: fixed;
+  left: 8px;
+  top: 8px;
   background-color: #000;
   border: 3px solid #fff;
   padding: 8px 12px;
@@ -144,22 +149,17 @@
   font-size: 12px;
 }
 
-/* Split Mode Styles */
-.bottom-panel.mode-split .command-section {
-  flex: 0 0 180px; /* 左側の固定幅 */
+.command-section {
+  position: fixed;
+  bottom: 8px;
+  left: 8px;
+  width: 180px;
+  z-index: 40;
   display: flex;
   flex-direction: column;
 }
 
-.bottom-panel.mode-split .message-box {
-  flex: 1; /* 残りの幅を占有 */
-}
-
-/* Full Mode Styles */
-.bottom-panel.mode-full .message-box {
-  width: 100%;
-  flex: 1;
-}
+/* Split/Full Mode Styles are deprecated with fixed positioning */
 
 /* コマンドウィンドウ共通スタイル */
 .command-window,
