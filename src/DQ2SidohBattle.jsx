@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './DQ2SidohBattle.css';
 import { useBackgroundAudio } from './hooks/useBackgroundAudio';
-import sidohImg from './assets/sido----.png';
+import sidohImg from './assets/sidoh_final.png';
 
 const DQ2SidohBattle = () => {
   const [gameState, setGameState] = useState('intro');
