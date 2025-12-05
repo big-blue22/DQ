@@ -8,67 +8,97 @@ def game_page(page: Page):
     page.wait_for_selector(".game-container")
     return page
 
-def test_intro_layout_no_overlap(game_page: Page):
+def test_intro_state_layout(game_page: Page):
     """
-    Verifies that in the intro state, the 'Fight' button and the Message Box
-    do not overlap and are positioned correctly (Command Left, Message Right).
+    Intro State:
+    - Command Window (Start Button) should be visible and at Bottom Left.
+    - Message Window should NOT be visible (Mutually Exclusive).
+    - Party Window should be visible at Bottom Right.
     """
-    # Wait for initial state
-    message_box = game_page.locator(".message-text").first
-    # The current code uses .command-container for the intro button
-    # But we want to check whatever contains the "Fight" button
-    fight_button = game_page.get_by_role("button", name="たたかう")
+    # Intro button "たたかう"
+    fight_btn = game_page.get_by_role("button", name="たたかう")
+    expect(fight_btn).to_be_visible()
 
-    expect(message_box).to_be_visible()
-    expect(fight_button).to_be_visible()
+    # Check Position: Bottom Left (approx)
+    btn_box = fight_btn.bounding_box()
+    game_box = game_page.locator(".game-board").bounding_box()
 
-    msg_box = message_box.locator("..") # Get parent .message-box
+    # Center of button should be in the left half
+    assert (btn_box['x'] + btn_box['width']/2) < (game_box['x'] + game_box['width']/2)
 
-    # Get bounding boxes
-    msg_bbox = msg_box.bounding_box()
-    btn_bbox = fight_button.bounding_box()
+    # Message Window check
+    # In this design, Message Window is hidden when Command is active
+    msg_box = game_page.locator(".message-box")
+    expect(msg_box).not_to_be_visible()
 
-    # Check for overlap
-    # Rectangles overlap if:
-    # l1.x < l2.x + l2.w && l1.x + l1.w > l2.x &&
-    # l1.y < l2.y + l2.h && l1.y + l1.h > l2.y
+    # Party Window check
+    party_win = game_page.locator(".party-window")
+    expect(party_win).to_be_visible()
+    # Check Position: Bottom Right
+    party_box = party_win.bounding_box()
+    # Center of party window should be in the right half
+    assert (party_box['x'] + party_box['width']/2) > (game_box['x'] + game_box['width']/2)
 
-    overlap_x = (msg_bbox['x'] < btn_bbox['x'] + btn_bbox['width']) and \
-                (msg_bbox['x'] + msg_bbox['width'] > btn_bbox['x'])
-    overlap_y = (msg_bbox['y'] < btn_bbox['y'] + btn_bbox['height']) and \
-                (msg_bbox['y'] + msg_bbox['height'] > btn_bbox['y'])
-
-    is_overlapping = overlap_x and overlap_y
-
-    print(f"Overlap check: X={overlap_x}, Y={overlap_y}, IsOverlapping={is_overlapping}")
-
-    if is_overlapping:
-        pytest.fail("The Fight button overlaps with the Message Box!")
-
-def test_command_layout_position(game_page: Page):
+def test_command_state_layout(game_page: Page):
     """
-    Verifies that after clicking Fight, the Command Window is on the left
-    and Message Window is on the right (or at least valid layout).
+    Command State (after clicking Start):
+    - Command Window should be visible at Bottom Left.
+    - Message Window should NOT be visible.
+    - We verify we are in command state by checking for other buttons like 'Run'.
     """
-    fight_button = game_page.get_by_role("button", name="たたかう")
-    fight_button.click()
+    # Click Start (Intro)
+    game_page.get_by_role("button", name="たたかう").click()
 
-    # Now in command state
-    # Wait for command window
-    command_window = game_page.locator(".command-window")
-    expect(command_window).to_be_visible()
+    # Wait for "Run" button to appear (confirms we are in Command state)
+    run_btn = game_page.get_by_role("button", name="にげる")
+    expect(run_btn).to_be_visible()
 
-    # In the NEW layout, we expect a message box to be visible to the right?
-    # Or at least the command window should be to the left.
+    # Verify Command Window container
+    cmd_window = game_page.locator(".command-window")
+    expect(cmd_window).to_be_visible()
 
-    cmd_bbox = command_window.bounding_box()
+    # Check Position: Bottom Left
+    cmd_box = cmd_window.bounding_box()
+    game_box = game_page.locator(".game-board").bounding_box()
 
-    # Check if it is on the left side of the screen/game-board
-    game_board = game_page.locator(".game-board").bounding_box()
+    assert (cmd_box['x'] + cmd_box['width']/2) < (game_box['x'] + game_box['width']/2)
 
-    # Center of command window
-    cmd_center_x = cmd_bbox['x'] + cmd_bbox['width'] / 2
-    board_center_x = game_board['x'] + game_board['width'] / 2
+    # Message Window Hidden
+    msg_box = game_page.locator(".message-box")
+    expect(msg_box).not_to_be_visible()
 
-    # It should be on the left half
-    assert cmd_center_x < board_center_x, "Command window should be on the left side"
+def test_battle_state_layout(game_page: Page):
+    """
+    Battle State (during attack animation):
+    - Message Window should be visible and CENTERED.
+    - Command Window should NOT be visible.
+    """
+    # Navigate to Attack
+    # 1. Start Game
+    game_page.get_by_role("button", name="たたかう").click()
+
+    # 2. Wait for Command Menu and Click Fight
+    # Use explicit locator to ensure we click the command menu button
+    game_page.get_by_role("button", name="にげる").wait_for() # Wait for menu load
+    game_page.locator(".command-grid > button").filter(has_text="たたかう").click()
+
+    # 3. Select Weapon (Submenu)
+    game_page.locator(".submenu-list > button").filter(has_text="ぶきで こうげき").click()
+
+    # Now animating. Message box should appear.
+    msg_box = game_page.locator(".message-box")
+    expect(msg_box).to_be_visible()
+
+    # Check Centering
+    msg_box_box = msg_box.bounding_box()
+    game_box = game_page.locator(".game-board").bounding_box()
+
+    msg_center = msg_box_box['x'] + msg_box_box['width'] / 2
+    game_center = game_box['x'] + game_box['width'] / 2
+
+    # Allow small pixel difference (e.g. subpixel rendering)
+    assert abs(msg_center - game_center) < 2.0, f"Message box not centered. Msg: {msg_center}, Game: {game_center}"
+
+    # Command Window Hidden
+    cmd_window = game_page.locator(".command-window")
+    expect(cmd_window).not_to_be_visible()
