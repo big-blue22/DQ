@@ -3,7 +3,7 @@ import './DQ2SidohBattle.css';
 import { useBackgroundAudio } from './hooks/useBackgroundAudio';
 
 const DQ2SidohBattle = () => {
-  const [gameState, setGameState] = useState('intro');
+  const [gameState, setGameState] = useState('intro_message');
   const [turn, setTurn] = useState(0);
   const [message, setMessage] = useState('はかいしん シドーが あらわれた!');
   const [currentCharacter, setCurrentCharacter] = useState(0);
@@ -35,6 +35,16 @@ const DQ2SidohBattle = () => {
       { name: 'ベホイミ', mp: 5, type: 'heal', power: 80 },
       { name: 'ザオラル', mp: 12, type: 'revive' }
     ]
+  };
+
+  const handleScreenClick = () => {
+    if (gameState === 'intro_message') {
+      setGameState('intro_command');
+    } else if (gameState === 'victory_message') {
+      setGameState('victory_command');
+    } else if (gameState === 'gameover_message') {
+      setGameState('gameover_command');
+    }
   };
 
   const handleCommand = (command) => {
@@ -137,7 +147,7 @@ const DQ2SidohBattle = () => {
     setTimeout(() => {
       if (newSidoh.hp <= 0) {
         setMessage('シドーを たおした!\n\nせかいに へいわが おとずれた・・・');
-        setGameState('victory');
+        setGameState('victory_message');
         setAnimating(false);
       } else {
         nextTurn();
@@ -164,7 +174,7 @@ const DQ2SidohBattle = () => {
 
       if (aliveParty.length === 0) {
         setMessage('パーティは ぜんめつした・・・');
-        setGameState('gameover');
+        setGameState('gameover_message');
         setAnimating(false);
         return;
       }
@@ -201,7 +211,7 @@ const DQ2SidohBattle = () => {
         const stillAlive = newParty.filter(p => p.status !== 'dead');
         if (stillAlive.length === 0) {
           setMessage('パーティは ぜんめつした・・・');
-          setGameState('gameover');
+          setGameState('gameover_message');
         } else {
           setCurrentCharacter(0);
           setGameState('command');
@@ -212,13 +222,15 @@ const DQ2SidohBattle = () => {
     }, 1000);
   };
 
-  const startGame = () => {
+  const startGame = (e) => {
+    e.stopPropagation(); // Prevent screen click from firing immediately
     setGameState('command');
     setMessage('');
     play(); // バックグラウンド音声再生開始
   };
 
-  const restartGame = () => {
+  const restartGame = (e) => {
+    e.stopPropagation();
     setParty([
       { name: 'ローレシア', level: 44, hp: 189, maxHp: 189, mp: 31, maxMp: 31, atk: 120, def: 80, status: 'normal', canUseMagic: false },
       { name: 'サマルトリア', level: 31, hp: 159, maxHp: 159, mp: 93, maxMp: 93, atk: 90, def: 70, status: 'normal', canUseMagic: true },
@@ -227,16 +239,16 @@ const DQ2SidohBattle = () => {
     setSidoh({ name: 'シドー', hp: 2000, maxHp: 2000, atk: 180, def: 120, status: 'normal' });
     setCurrentCharacter(0);
     setTurn(0);
-    setGameState('intro');
+    setGameState('intro_message');
     setMessage('はかいしん シドーが あらわれた!');
     setAnimating(false);
     pause(); // 音声を一時停止してリセット
   };
 
-  const isCommandMode = ['intro', 'command', 'selectAttackType', 'selectSpell', 'victory', 'gameover'].includes(gameState) && !animating;
+  const isCommandMode = ['intro_command', 'command', 'selectAttackType', 'selectSpell', 'victory_command', 'gameover_command'].includes(gameState) && !animating;
 
   return (
-    <div className="game-container">
+    <div className="game-container" onClick={handleScreenClick}>
       <div className="game-board">
         {/* Party Status Window (左上) */}
         <div className="party-window">
@@ -274,8 +286,8 @@ const DQ2SidohBattle = () => {
         <div className={`bottom-panel ${isCommandMode ? 'mode-split' : 'mode-full'}`}>
           {/* Command Window Section */}
           {isCommandMode && (
-            <div className="command-section">
-              {gameState === 'intro' && (
+            <div className="command-section" onClick={(e) => e.stopPropagation()}>
+              {gameState === 'intro_command' && (
                 <div className="command-window">
                    <div className="command-grid">
                       <button onClick={startGame} className="command-button selected">
@@ -375,7 +387,7 @@ const DQ2SidohBattle = () => {
                 </div>
               )}
 
-              {(gameState === 'victory' || gameState === 'gameover') && (
+              {(gameState === 'victory_command' || gameState === 'gameover_command') && (
                 <div className="command-window">
                     <div className="command-grid">
                         <button onClick={restartGame} className="command-button selected">
@@ -388,9 +400,11 @@ const DQ2SidohBattle = () => {
           )}
 
           {/* Message Box */}
-          <div className="message-box">
-            <div className="message-text">{message}</div>
-          </div>
+          {!isCommandMode && (
+            <div className="message-box">
+              <div className="message-text">{message}</div>
+            </div>
+          )}
         </div>
       </div>
     </div>
