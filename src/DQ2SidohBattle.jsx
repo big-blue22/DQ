@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './DQ2SidohBattle.css';
 import { useBackgroundAudio } from './hooks/useBackgroundAudio';
 import sidohImg from './assets/sidoh_final.png';
@@ -11,6 +11,10 @@ const DQ2SidohBattle = () => {
   const [selectedCommand, setSelectedCommand] = useState(null);
   const [selectedSpell, setSelectedSpell] = useState(null);
   const [animating, setAnimating] = useState(false);
+
+  // Keyboard Navigation State
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
   const [party, setParty] = useState([
     { name: 'ローレシア', level: 44, hp: 189, maxHp: 189, mp: 31, maxMp: 31, atk: 120, def: 80, status: 'normal', canUseMagic: false },
     { name: 'サマルトリア', level: 31, hp: 159, maxHp: 159, mp: 93, maxMp: 93, atk: 90, def: 70, status: 'normal', canUseMagic: true },
@@ -236,6 +240,98 @@ const DQ2SidohBattle = () => {
 
   const isCommandMode = ['intro', 'command', 'selectAttackType', 'selectSpell', 'victory', 'gameover'].includes(gameState) && !animating;
 
+  // Determine available menu options based on current game state
+  const getMenuOptions = () => {
+    if (!isCommandMode) return [];
+
+    switch (gameState) {
+      case 'intro':
+        return [{ label: 'たたかう', action: startGame, className: 'command-button' }];
+      case 'command':
+        return [
+          { label: 'たたかう', action: () => handleCommand('たたかう'), className: 'command-button' },
+          { label: 'にげる', action: () => handleCommand('にげる'), className: 'command-button' },
+          { label: 'ぼうぎょ', action: () => handleCommand('ぼうぎょ'), className: 'command-button' },
+          { label: 'どうぐ', action: () => handleCommand('どうぐ'), className: 'command-button' }
+        ];
+      case 'selectAttackType':
+        const opts = [
+          { label: 'ぶきで こうげき', action: () => handleAttackType('ぶきで こうげき'), className: 'submenu-button' }
+        ];
+        if (party[currentCharacter].canUseMagic) {
+          opts.push({ label: 'じゅもん', action: () => handleAttackType('じゅもん'), className: 'submenu-button' });
+        }
+        opts.push({ label: 'もどる', action: () => setGameState('command'), className: 'back-button' });
+        return opts;
+      case 'selectSpell':
+        const spellOpts = spells[currentCharacter].map(spell => ({
+          label: (
+            <>
+              <span className="spell-name">{spell.name}</span>
+              <span className="spell-cost">MP {spell.mp}</span>
+            </>
+          ),
+          action: () => handleSpell(spell),
+          disabled: party[currentCharacter].mp < spell.mp,
+          className: 'spell-button'
+        }));
+        spellOpts.push({ label: 'もどる', action: () => setGameState('selectAttackType'), className: 'back-button' });
+        return spellOpts;
+      case 'victory':
+      case 'gameover':
+        return [{ label: 'もういちど', action: restartGame, className: 'command-button' }];
+      default:
+        return [];
+    }
+  };
+
+  const menuOptions = getMenuOptions();
+
+  // Reset selected index when menu changes
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [gameState]);
+
+  // Handle keyboard input
+  useEffect(() => {
+    if (!isCommandMode || menuOptions.length === 0) return;
+
+    const handleKeyDown = (e) => {
+      // Prevent default scrolling for arrows/space
+      if (['ArrowUp', 'ArrowDown', 'Space', 'Enter'].includes(e.code)) {
+        e.preventDefault();
+      }
+
+      switch (e.code) {
+        case 'ArrowUp':
+        case 'KeyW':
+          setSelectedIndex(prev => (prev - 1 + menuOptions.length) % menuOptions.length);
+          break;
+        case 'ArrowDown':
+        case 'KeyS':
+          setSelectedIndex(prev => (prev + 1) % menuOptions.length);
+          break;
+        case 'Enter':
+        case 'Space':
+          const selected = menuOptions[selectedIndex];
+          if (selected && !selected.disabled) {
+            selected.action();
+          }
+          break;
+        case 'Escape':
+        case 'Backspace':
+          if (gameState === 'selectAttackType') setGameState('command');
+          if (gameState === 'selectSpell') setGameState('selectAttackType');
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isCommandMode, menuOptions, selectedIndex, gameState]);
+
   return (
     <div className="game-container">
       <div className="game-board">
@@ -276,115 +372,29 @@ const DQ2SidohBattle = () => {
           {/* Command Window Section */}
           {isCommandMode && (
             <div className="command-section">
-              {gameState === 'intro' && (
-                <div className="command-window">
-                   <div className="command-grid">
-                      <button onClick={startGame} className="command-button selected">
-                        たたかう
-                      </button>
-                   </div>
-                </div>
-              )}
-
-              {gameState === 'command' && (
-                <div className="command-window">
-                  <div className="command-grid">
-                    <button
-                      onClick={() => handleCommand('たたかう')}
-                      disabled={animating}
-                      className="command-button"
-                    >
-                      たたかう
-                    </button>
-                    <button
-                      onClick={() => handleCommand('にげる')}
-                      disabled={animating}
-                      className="command-button"
-                    >
-                      にげる
-                    </button>
-                    <button
-                      onClick={() => handleCommand('ぼうぎょ')}
-                      disabled={animating}
-                      className="command-button"
-                    >
-                      ぼうぎょ
-                    </button>
-                    <button
-                      onClick={() => handleCommand('どうぐ')}
-                      disabled={animating}
-                      className="command-button"
-                    >
-                      どうぐ
-                    </button>
+               <div className={
+                  gameState === 'selectAttackType' || gameState === 'selectSpell'
+                  ? "submenu-window"
+                  : "command-window"
+               }>
+                  <div className={
+                     gameState === 'selectSpell' ? "spell-list" :
+                     gameState === 'selectAttackType' ? "submenu-list" :
+                     "command-grid"
+                  }>
+                     {menuOptions.map((opt, idx) => (
+                       <button
+                         key={idx}
+                         onClick={opt.action}
+                         disabled={opt.disabled}
+                         className={`${opt.className} ${selectedIndex === idx ? 'selected' : ''}`}
+                         onMouseEnter={() => setSelectedIndex(idx)}
+                       >
+                         {opt.label}
+                       </button>
+                     ))}
                   </div>
-                </div>
-              )}
-
-              {gameState === 'selectAttackType' && (
-                <div className="submenu-window">
-                  <div className="submenu-list">
-                    <button
-                      onClick={() => handleAttackType('ぶきで こうげき')}
-                      disabled={animating}
-                      className="submenu-button"
-                    >
-                      ぶきで こうげき
-                    </button>
-                    {party[currentCharacter].canUseMagic && (
-                      <button
-                        onClick={() => handleAttackType('じゅもん')}
-                        disabled={animating}
-                        className="submenu-button"
-                      >
-                        じゅもん
-                      </button>
-                    )}
-                    <button
-                      onClick={() => setGameState('command')}
-                      disabled={animating}
-                      className="back-button"
-                    >
-                      もどる
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {gameState === 'selectSpell' && (
-                <div className="submenu-window">
-                  <div className="spell-list">
-                    {spells[currentCharacter].map((spell, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => handleSpell(spell)}
-                        disabled={animating || party[currentCharacter].mp < spell.mp}
-                        className="spell-button"
-                      >
-                        <span className="spell-name">{spell.name}</span>
-                        <span className="spell-cost">MP {spell.mp}</span>
-                      </button>
-                    ))}
-                    <button
-                      onClick={() => setGameState('selectAttackType')}
-                      disabled={animating}
-                      className="back-button"
-                    >
-                      もどる
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {(gameState === 'victory' || gameState === 'gameover') && (
-                <div className="command-window">
-                    <div className="command-grid">
-                        <button onClick={restartGame} className="command-button selected">
-                        もういちど
-                        </button>
-                    </div>
-                </div>
-              )}
+               </div>
             </div>
           )}
 
