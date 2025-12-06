@@ -239,6 +239,14 @@ const DQ2SidohBattle = () => {
   };
 
   const isCommandMode = ['intro', 'command', 'selectAttackType', 'selectSpell', 'victory', 'gameover'].includes(gameState) && !animating;
+  const isSubmenuActive = ['selectAttackType', 'selectSpell'].includes(gameState);
+
+  const MAIN_MENU_ITEMS = [
+    { label: 'たたかう', value: 'たたかう' },
+    { label: 'にげる', value: 'にげる' },
+    { label: 'ぼうぎょ', value: 'ぼうぎょ' },
+    { label: 'どうぐ', value: 'どうぐ' }
+  ];
 
   // Determine available menu options based on current game state
   const getMenuOptions = () => {
@@ -248,12 +256,11 @@ const DQ2SidohBattle = () => {
       case 'intro':
         return [{ label: 'たたかう', action: startGame, className: 'command-button' }];
       case 'command':
-        return [
-          { label: 'たたかう', action: () => handleCommand('たたかう'), className: 'command-button' },
-          { label: 'にげる', action: () => handleCommand('にげる'), className: 'command-button' },
-          { label: 'ぼうぎょ', action: () => handleCommand('ぼうぎょ'), className: 'command-button' },
-          { label: 'どうぐ', action: () => handleCommand('どうぐ'), className: 'command-button' }
-        ];
+        return MAIN_MENU_ITEMS.map(item => ({
+          label: item.label,
+          action: () => handleCommand(item.value),
+          className: 'command-button'
+        }));
       case 'selectAttackType':
         const opts = [
           { label: 'ぶきで こうげき', action: () => handleAttackType('ぶきで こうげき'), className: 'submenu-button' }
@@ -372,29 +379,53 @@ const DQ2SidohBattle = () => {
           {/* Command Window Section */}
           {isCommandMode && (
             <div className="command-section">
-               <div className={
-                  gameState === 'selectAttackType' || gameState === 'selectSpell'
-                  ? "submenu-window"
-                  : "command-window"
-               }>
-                  <div className={
-                     gameState === 'selectSpell' ? "spell-list" :
-                     gameState === 'selectAttackType' ? "submenu-list" :
-                     "command-grid"
-                  }>
-                     {menuOptions.map((opt, idx) => (
-                       <button
-                         key={idx}
-                         onClick={opt.action}
-                         disabled={opt.disabled}
-                         className={`${opt.className} ${selectedIndex === idx ? 'selected' : ''}`}
-                         onMouseEnter={() => setSelectedIndex(idx)}
-                       >
-                         {opt.label}
-                       </button>
-                     ))}
+               {/* Main Command Window */}
+               <div className={`command-window ${isSubmenuActive ? 'inactive' : ''}`}>
+                  <div className="command-grid">
+                     {isSubmenuActive ? (
+                        MAIN_MENU_ITEMS.map((cmd, idx) => (
+                           <button
+                             key={idx}
+                             className={`command-button ${selectedCommand === cmd.value ? 'selected' : ''}`}
+                             disabled={true}
+                           >
+                             {cmd.label}
+                           </button>
+                        ))
+                     ) : (
+                        menuOptions.map((opt, idx) => (
+                           <button
+                             key={idx}
+                             onClick={opt.action}
+                             disabled={opt.disabled}
+                             className={`${opt.className} ${selectedIndex === idx ? 'selected' : ''}`}
+                             onMouseEnter={() => setSelectedIndex(idx)}
+                           >
+                             {opt.label}
+                           </button>
+                        ))
+                     )}
                   </div>
                </div>
+
+               {/* Submenu Window - Only appears when active */}
+               {isSubmenuActive && (
+                  <div className="submenu-window">
+                     <div className={gameState === 'selectSpell' ? "spell-list" : "submenu-list"}>
+                        {menuOptions.map((opt, idx) => (
+                           <button
+                             key={idx}
+                             onClick={opt.action}
+                             disabled={opt.disabled}
+                             className={`${opt.className} ${selectedIndex === idx ? 'selected' : ''}`}
+                             onMouseEnter={() => setSelectedIndex(idx)}
+                           >
+                             {opt.label}
+                           </button>
+                        ))}
+                     </div>
+                  </div>
+               )}
             </div>
           )}
 
