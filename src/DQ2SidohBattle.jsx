@@ -389,9 +389,11 @@ const DQ2SidohBattle = () => {
           )}
 
           {/* Message Box */}
-          <div className="message-box">
-            <div className="message-text">{message}</div>
-          </div>
+          {!isCommandMode && (
+            <div className="message-box">
+              <div className="message-text">{message}</div>
+            </div>
+          )}
         </div>
       </div>
     </div>
