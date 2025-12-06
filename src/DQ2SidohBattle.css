@@ -231,7 +231,10 @@
   cursor: default;
 }
 
-.command-button.selected::before {
+.command-button.selected::before,
+.submenu-button.selected::before,
+.spell-button.selected::before,
+.back-button.selected::before {
   content: '▶';
   position: absolute;
   left: -12px;
