@@ -21,6 +21,7 @@ const DQ2SidohBattle = () => {
     { name: 'ムーンブルク', level: 28, hp: 105, maxHp: 105, mp: 115, maxMp: 115, atk: 60, def: 50, status: 'normal', canUseMagic: true }
   ]);
   const [sidoh, setSidoh] = useState({ name: 'シドー', hp: 2000, maxHp: 2000, atk: 180, def: 120, status: 'normal' });
+  const [isSidohDamaged, setIsSidohDamaged] = useState(false);
 
   // バックグラウンド音声再生（ループ）
   const { play, pause, isPlaying } = useBackgroundAudio(
@@ -91,6 +92,8 @@ const DQ2SidohBattle = () => {
       const actualDamage = Math.max(1, damage);
       newSidoh.hp = Math.max(0, newSidoh.hp - actualDamage);
       msg = `${char.name}の こうげき!\n${sidoh.name}に ${actualDamage}の ダメージ!`;
+      setIsSidohDamaged(true);
+      setTimeout(() => setIsSidohDamaged(false), 500);
     } else if (command === 'どうぐ') {
       msg = `${char.name}は どうぐを つかった!\n\nしかし なにも おこらなかった`;
     } else if (command === 'にげる') {
@@ -104,6 +107,8 @@ const DQ2SidohBattle = () => {
           const damage = Math.floor(Math.random() * 30) + spell.power;
           newSidoh.hp = Math.max(0, newSidoh.hp - damage);
           msg = `${char.name}は ${spell.name}を となえた!\n${sidoh.name}に ${damage}の ダメージ!`;
+          setIsSidohDamaged(true);
+          setTimeout(() => setIsSidohDamaged(false), 500);
         } else if (spell.type === 'heal') {
           const target = newParty.find(p => p.hp > 0 && p.hp < p.maxHp);
           if (target) {
@@ -371,7 +376,7 @@ const DQ2SidohBattle = () => {
 
         {/* Enemy Area (中央) */}
         <div className="enemy-area">
-          <img src={sidohImg} alt="シドー" className="enemy-image" />
+          <img src={sidohImg} alt="シドー" className={`enemy-image ${isSidohDamaged ? 'damage' : ''}`} />
         </div>
 
         {/* Bottom Panel (Command & Message) */}
