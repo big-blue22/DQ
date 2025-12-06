@@ -154,22 +154,31 @@
   position: fixed;
   bottom: 8px;
   left: 8px;
-  width: 180px;
   z-index: 40;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  gap: 8px;
 }
 
 /* Split/Full Mode Styles are deprecated with fixed positioning */
 
 /* コマンドウィンドウ共通スタイル */
-.command-window,
+.command-window {
+  background-color: #000;
+  border: 3px solid #fff;
+  padding: 14px 20px;
+  box-shadow: inset 0 0 0 3px #000;
+  width: 180px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
 .submenu-window {
   background-color: #000;
   border: 3px solid #fff;
   padding: 14px 20px;
   box-shadow: inset 0 0 0 3px #000;
-  width: 100%;
+  min-width: 220px;
   height: 100%;
   box-sizing: border-box;
 }
@@ -214,6 +223,12 @@
 .spell-button:disabled {
   opacity: 0.3;
   cursor: not-allowed;
+}
+
+/* Specific override for active items in an inactive (disabled) window */
+.command-window.inactive button.selected:disabled {
+  opacity: 1.0;
+  cursor: default;
 }
 
 .command-button.selected::before {
