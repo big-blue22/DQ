@@ -10,6 +10,7 @@ const DQ2SidohBattle = () => {
   const [currentCharacter, setCurrentCharacter] = useState(0);
   const [selectedCommand, setSelectedCommand] = useState(null);
   const [selectedSpell, setSelectedSpell] = useState(null);
+  const [pendingAction, setPendingAction] = useState(null);
   const [animating, setAnimating] = useState(false);
   const [commandQueue, setCommandQueue] = useState([]);
   const [battleQueue, setBattleQueue] = useState([]);
@@ -18,9 +19,18 @@ const DQ2SidohBattle = () => {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const [party, setParty] = useState([
-    { name: 'ローレシア', level: 44, hp: 189, maxHp: 189, mp: 31, maxMp: 31, atk: 120, def: 80, agi: 70, status: 'normal', canUseMagic: false },
-    { name: 'サマルトリア', level: 31, hp: 159, maxHp: 159, mp: 93, maxMp: 93, atk: 90, def: 70, agi: 110, status: 'normal', canUseMagic: true },
-    { name: 'ムーンブルク', level: 28, hp: 105, maxHp: 105, mp: 115, maxMp: 115, atk: 60, def: 50, agi: 140, status: 'normal', canUseMagic: true }
+    {
+      name: 'ローレシア', level: 44, hp: 189, maxHp: 189, mp: 31, maxMp: 31, atk: 120, def: 80, agi: 70, status: 'normal', canUseMagic: false,
+      items: [{ name: 'やくそう', type: 'heal', power: 30 }]
+    },
+    {
+      name: 'サマルトリア', level: 31, hp: 159, maxHp: 159, mp: 93, maxMp: 93, atk: 90, def: 70, agi: 110, status: 'normal', canUseMagic: true,
+      items: [{ name: 'やくそう', type: 'heal', power: 30 }]
+    },
+    {
+      name: 'ムーンブルク', level: 28, hp: 105, maxHp: 105, mp: 115, maxMp: 115, atk: 60, def: 50, agi: 140, status: 'normal', canUseMagic: true,
+      items: [{ name: 'やくそう', type: 'heal', power: 30 }]
+    }
   ]);
   const [sidoh, setSidoh] = useState({ name: 'シドー', hp: 2000, maxHp: 2000, atk: 180, def: 120, agi: 90, status: 'normal' });
   const [isSidohDamaged, setIsSidohDamaged] = useState(false);
@@ -45,10 +55,12 @@ const DQ2SidohBattle = () => {
     ]
   };
 
-  const registerCommand = (command, spell = null) => {
+  const registerCommand = (command, spell = null, item = null, target = null) => {
     const newQueue = [...commandQueue, {
       type: command,
       spell: spell,
+      item: item,
+      target: target,
       actorIndex: currentCharacter
     }];
     setCommandQueue(newQueue);
@@ -58,6 +70,7 @@ const DQ2SidohBattle = () => {
       setGameState('command');
       setSelectedCommand(null);
       setSelectedSpell(null);
+      setPendingAction(null);
     } else {
       startBattlePhase(newQueue);
     }
@@ -69,7 +82,9 @@ const DQ2SidohBattle = () => {
 
     if (command === 'たたかう') {
       setGameState('selectAttackType');
-    } else if (command === 'どうぐ' || command === 'にげる' || command === 'ぼうぎょ') {
+    } else if (command === 'どうぐ') {
+      setGameState('selectItem');
+    } else if (command === 'にげる' || command === 'ぼうぎょ') {
       registerCommand(command);
     }
   };
@@ -78,7 +93,8 @@ const DQ2SidohBattle = () => {
     if (animating) return;
     
     if (type === 'ぶきで こうげき') {
-      registerCommand('たたかう');
+      setPendingAction({ type: 'たたかう', subtype: 'attack' });
+      setGameState('selectTarget');
     } else if (type === 'じゅもん') {
       setGameState('selectSpell');
     }
@@ -87,7 +103,19 @@ const DQ2SidohBattle = () => {
   const handleSpell = (spell) => {
     if (animating) return;
     setSelectedSpell(spell);
-    registerCommand('じゅもん', spell);
+    setPendingAction({ type: 'じゅもん', spell: spell });
+    setGameState('selectTarget');
+  };
+
+  const handleItem = (item) => {
+    if (animating) return;
+    setPendingAction({ type: 'どうぐ', item: item });
+    setGameState('selectTarget');
+  };
+
+  const handleTargetSelection = (target) => {
+    const { type, spell, item } = pendingAction;
+    registerCommand(type, spell, item, target);
   };
 
   const startBattlePhase = (finalCommandQueue) => {
@@ -132,6 +160,7 @@ const DQ2SidohBattle = () => {
       setGameState('command');
       setSelectedCommand(null);
       setSelectedSpell(null);
+      setPendingAction(null);
       return;
     }
 
@@ -208,14 +237,60 @@ const DQ2SidohBattle = () => {
       const char = newParty[battler.index];
 
       if (cmd.type === 'たたかう') {
+         // Attack Enemy
+         let targetName = sidoh.name; // Default
+         if (cmd.target && cmd.target.isEnemy) {
+            targetName = cmd.target.name;
+         }
+
          const damage = Math.floor(Math.random() * 40) + char.atk - 60;
          const actualDamage = Math.max(1, damage);
          newSidoh.hp = Math.max(0, newSidoh.hp - actualDamage);
-         msg = `${char.name}の こうげき!\n${sidoh.name}に ${actualDamage}の ダメージ!`;
+         msg = `${char.name}の こうげき!\n${targetName}に ${actualDamage}の ダメージ!`;
          setIsSidohDamaged(true);
          setTimeout(() => setIsSidohDamaged(false), 500);
+
       } else if (cmd.type === 'どうぐ') {
-         msg = `${char.name}は どうぐを つかった!\n\nしかし なにも おこらなかった`;
+         if (cmd.item && cmd.item.name === 'やくそう') {
+             // Consume item
+             const itemIndex = newParty[battler.index].items.findIndex(i => i.name === 'やくそう');
+             if (itemIndex > -1) {
+                 newParty[battler.index].items.splice(itemIndex, 1);
+
+                 // Apply effect
+                 let target = null;
+                 if (cmd.target && !cmd.target.isEnemy) {
+                     target = newParty[cmd.target.index];
+                 }
+
+                 if (target) {
+                    if (target.status === 'dead') {
+                        msg = `${char.name}は ${cmd.item.name}を つかった!\nしかし こうかが なかった!`;
+                    } else {
+                        const heal = Math.min(30, target.maxHp - target.hp); // Yakusou heals ~30
+                        // Logic says heal power 30 in data, let's use that or hardcode ~30
+                        // Using fixed 30-40 range for flavor? Or fixed 30?
+                        // Using logic:
+                        const amount = 30 + Math.floor(Math.random() * 10);
+                        const actualHeal = Math.min(amount, target.maxHp - target.hp);
+
+                        if (target.hp === target.maxHp) {
+                             msg = `${char.name}は ${cmd.item.name}を つかった!\nしかし こうかが なかった!`;
+                        } else {
+                             target.hp += actualHeal;
+                             msg = `${char.name}は ${cmd.item.name}を つかった!\n${target.name}の HPが ${actualHeal} かいふくした!`;
+                        }
+                    }
+                 } else {
+                     msg = `${char.name}は ${cmd.item.name}を つかった!\nしかし ターゲットが いない!`;
+                 }
+             } else {
+                 msg = `${char.name}は どうぐを つかおうとしたが\nもっていなかった!`;
+             }
+         } else {
+             msg = `${char.name}は どうぐを つかった!\n\nしかし なにも おこらなかった`;
+         }
+
       } else if (cmd.type === 'にげる') {
          msg = `${char.name}は にげだした!\n\nしかし まわりこまれてしまった!`;
       } else if (cmd.type === 'じゅもん' && cmd.spell) {
@@ -224,37 +299,75 @@ const DQ2SidohBattle = () => {
            msg = 'MPが たりない!';
          } else {
            newParty[battler.index].mp -= spell.mp;
+
            if (spell.type === 'attack') {
+             let targetName = sidoh.name;
+             if (cmd.target && cmd.target.isEnemy) targetName = cmd.target.name;
+
              const damage = Math.floor(Math.random() * 30) + spell.power;
              newSidoh.hp = Math.max(0, newSidoh.hp - damage);
-             msg = `${char.name}は ${spell.name}を となえた!\n${sidoh.name}に ${damage}の ダメージ!`;
+             msg = `${char.name}は ${spell.name}を となえた!\n${targetName}に ${damage}の ダメージ!`;
              setIsSidohDamaged(true);
              setTimeout(() => setIsSidohDamaged(false), 500);
+
            } else if (spell.type === 'heal') {
-             const target = newParty.find(p => p.hp > 0 && p.hp < p.maxHp);
-             if (target) {
+             let target = null;
+             if (cmd.target && !cmd.target.isEnemy) {
+                 target = newParty[cmd.target.index];
+             } else {
+                 // Fallback (should not happen with new UI)
+                 target = newParty.find(p => p.hp > 0 && p.hp < p.maxHp);
+             }
+
+             if (target && target.status !== 'dead') {
                const heal = Math.min(spell.power, target.maxHp - target.hp);
-               target.hp += heal;
-               msg = `${char.name}は ${spell.name}を となえた!\n${target.name}の HPが ${heal} かいふくした!`;
+               if (heal === 0 && target.hp === target.maxHp) {
+                  msg = `${char.name}は ${spell.name}を となえた!\nしかし こうかが なかった!`;
+               } else {
+                  target.hp += heal;
+                  msg = `${char.name}は ${spell.name}を となえた!\n${target.name}の HPが ${heal} かいふくした!`;
+               }
              } else {
                msg = `${char.name}は ${spell.name}を となえた!\nしかし こうかが なかった!`;
              }
+
            } else if (spell.type === 'revive') {
-             const deadChar = newParty.find(p => p.status === 'dead');
-             if (deadChar) {
+             let target = null;
+             if (cmd.target && !cmd.target.isEnemy) {
+                 target = newParty[cmd.target.index];
+             } else {
+                 target = newParty.find(p => p.status === 'dead');
+             }
+
+             if (target && target.status === 'dead') {
                if (Math.random() > 0.5 || spell.name === 'ザオリク') {
-                 deadChar.status = 'normal';
-                 deadChar.hp = Math.floor(deadChar.maxHp / 2);
-                 msg = `${char.name}は ${spell.name}を となえた!\n${deadChar.name}は いきかえった!`;
+                 target.status = 'normal';
+                 target.hp = Math.floor(target.maxHp / 2);
+                 msg = `${char.name}は ${spell.name}を となえた!\n${target.name}は いきかえった!`;
                } else {
                  msg = `${char.name}は ${spell.name}を となえた!\nしかし こうかが なかった!`;
                }
              } else {
                msg = `${char.name}は ${spell.name}を となえた!\nしかし こうかが なかった!`;
              }
+
            } else if (spell.type === 'buff') {
-             newParty[battler.index].atk = Math.floor(newParty[battler.index].atk * 1.3);
-             msg = `${char.name}は ${spell.name}を となえた!\n${char.name}の こうげきりょくが あがった!`;
+             // Buff usually targets ally, but currently simplified to self or specific?
+             // Assuming self-buff or ally buff?
+             // Original: newParty[battler.index].atk (Self)
+             // If target is selected, apply to target.
+
+             let target = newParty[battler.index]; // Default self
+             if (cmd.target && !cmd.target.isEnemy) {
+                 target = newParty[cmd.target.index];
+             }
+
+             if (target.status !== 'dead') {
+                 target.atk = Math.floor(target.atk * 1.3);
+                 msg = `${char.name}は ${spell.name}を となえた!\n${target.name}の こうげきりょくが あがった!`;
+             } else {
+                 msg = `${char.name}は ${spell.name}を となえた!\nしかし こうかが なかった!`;
+             }
            }
          }
       } else if (cmd.type === 'ぼうぎょ') {
@@ -300,9 +413,18 @@ const DQ2SidohBattle = () => {
 
   const restartGame = () => {
     setParty([
-      { name: 'ローレシア', level: 44, hp: 189, maxHp: 189, mp: 31, maxMp: 31, atk: 120, def: 80, agi: 70, status: 'normal', canUseMagic: false },
-      { name: 'サマルトリア', level: 31, hp: 159, maxHp: 159, mp: 93, maxMp: 93, atk: 90, def: 70, agi: 110, status: 'normal', canUseMagic: true },
-      { name: 'ムーンブルク', level: 28, hp: 105, maxHp: 105, mp: 115, maxMp: 115, atk: 60, def: 50, agi: 140, status: 'normal', canUseMagic: true }
+      {
+        name: 'ローレシア', level: 44, hp: 189, maxHp: 189, mp: 31, maxMp: 31, atk: 120, def: 80, agi: 70, status: 'normal', canUseMagic: false,
+        items: [{ name: 'やくそう', type: 'heal', power: 30 }]
+      },
+      {
+        name: 'サマルトリア', level: 31, hp: 159, maxHp: 159, mp: 93, maxMp: 93, atk: 90, def: 70, agi: 110, status: 'normal', canUseMagic: true,
+        items: [{ name: 'やくそう', type: 'heal', power: 30 }]
+      },
+      {
+        name: 'ムーンブルク', level: 28, hp: 105, maxHp: 105, mp: 115, maxMp: 115, atk: 60, def: 50, agi: 140, status: 'normal', canUseMagic: true,
+        items: [{ name: 'やくそう', type: 'heal', power: 30 }]
+      }
     ]);
     setSidoh({ name: 'シドー', hp: 2000, maxHp: 2000, atk: 180, def: 120, agi: 90, status: 'normal' });
     setCurrentCharacter(0);
@@ -315,8 +437,8 @@ const DQ2SidohBattle = () => {
     pause(); // 音声を一時停止してリセット
   };
 
-  const isCommandMode = ['intro', 'command', 'selectAttackType', 'selectSpell', 'victory', 'gameover'].includes(gameState) && !animating;
-  const isSubmenuActive = ['selectAttackType', 'selectSpell'].includes(gameState);
+  const isCommandMode = ['intro', 'command', 'selectAttackType', 'selectSpell', 'selectItem', 'selectTarget', 'victory', 'gameover'].includes(gameState) && !animating;
+  const isSubmenuActive = ['selectAttackType', 'selectSpell', 'selectItem', 'selectTarget'].includes(gameState);
 
   const MAIN_MENU_ITEMS = [
     { label: 'たたかう', value: 'たたかう' },
@@ -373,6 +495,50 @@ const DQ2SidohBattle = () => {
         }));
         spellOpts.push({ label: 'もどる', action: () => setGameState('selectAttackType'), className: 'back-button' });
         return spellOpts;
+      case 'selectItem':
+        const itemOpts = party[currentCharacter].items.map((item, idx) => ({
+          label: item.name,
+          action: () => handleItem(item),
+          className: 'item-button'
+        }));
+        itemOpts.push({ label: 'もどる', action: () => setGameState('command'), className: 'back-button' });
+        return itemOpts;
+      case 'selectTarget':
+        if (!pendingAction) return [];
+        let targets = [];
+
+        // Determine valid targets based on action type
+        const isEnemyTarget = (pendingAction.type === 'たたかう') || (pendingAction.type === 'じゅもん' && pendingAction.spell.type === 'attack');
+
+        if (isEnemyTarget) {
+          // Target Enemy (Sidoh only for now)
+          if (sidoh.hp > 0) {
+            targets.push({
+               label: sidoh.name,
+               action: () => handleTargetSelection({ name: sidoh.name, isEnemy: true }),
+               className: 'target-button'
+            });
+          }
+        } else {
+          // Target Party (Heal/Buff/Revive)
+          party.forEach((member, idx) => {
+             targets.push({
+               label: member.name,
+               action: () => handleTargetSelection({ name: member.name, index: idx, isEnemy: false }),
+               className: 'target-button'
+             });
+          });
+        }
+        targets.push({
+           label: 'もどる',
+           action: () => {
+             if (pendingAction.type === 'たたかう') setGameState('selectAttackType');
+             else if (pendingAction.type === 'じゅもん') setGameState('selectSpell');
+             else if (pendingAction.type === 'どうぐ') setGameState('selectItem');
+           },
+           className: 'back-button'
+        });
+        return targets;
       case 'victory':
       case 'gameover':
         return [{ label: 'もういちど', action: restartGame, className: 'command-button' }];
@@ -416,7 +582,13 @@ const DQ2SidohBattle = () => {
           break;
         case 'Escape':
         case 'Backspace':
-          if (gameState === 'selectAttackType') {
+          if (gameState === 'selectTarget') {
+             if (pendingAction.type === 'たたかう') setGameState('selectAttackType');
+             else if (pendingAction.type === 'じゅもん') setGameState('selectSpell');
+             else if (pendingAction.type === 'どうぐ') setGameState('selectItem');
+          } else if (gameState === 'selectItem') {
+            setGameState('command');
+          } else if (gameState === 'selectAttackType') {
             setGameState('command');
           } else if (gameState === 'selectSpell') {
             setGameState('selectAttackType');
@@ -504,23 +676,65 @@ const DQ2SidohBattle = () => {
                   </div>
                </div>
 
-               {/* Submenu Window - Visible during selectAttackType OR selectSpell */}
-               {isSubmenuActive && (
-                  <div className={`submenu-window ${gameState === 'selectSpell' ? 'inactive' : ''}`}>
+               {/* Column 2: Attack/Spell Selection OR Item Selection */}
+               {/* Determine if we should show the Action Type window (Attack/Spell/Back) or Item Window */}
+
+               {/* Logic for Column 2:
+                   Visible if: selectAttackType, selectSpell, selectTarget (from Attack/Spell), or selectItem
+
+                   Wait, selectItem is its own Column 2.
+               */}
+
+               {/* Submenu Window (Attack Type Selection) */}
+               {/* Show if we are in selectAttackType, selectSpell, or selectTarget (coming from Attack/Spell) */}
+               { (gameState === 'selectAttackType' || gameState === 'selectSpell' || (gameState === 'selectTarget' && pendingAction?.type !== 'どうぐ')) && (
+                  <div className={`submenu-window ${gameState === 'selectSpell' || gameState === 'selectTarget' ? 'inactive' : ''}`}>
                      <div className="submenu-list">
-                        {gameState === 'selectSpell' ? (
-                          // Inactive State: Render fixed options
-                          getBattleActionOptions(currentCharacter).map((item, idx) => (
+                        {/* If inactive, show static options. If active, show menuOptions */}
+                        {(gameState === 'selectSpell' || gameState === 'selectTarget') ? (
+                           getBattleActionOptions(currentCharacter).map((item, idx) => (
                             <button
                               key={idx}
-                              className={`${item.className} ${item.value === 'spell' ? 'selected' : ''}`}
+                              className={`${item.className} ${
+                                (item.value === 'spell' && pendingAction?.type === 'じゅもん') || (item.value === 'attack' && pendingAction?.type === 'たたかう') ? 'selected' : ''
+                              }`}
                               disabled={true}
                             >
                               {item.label}
                             </button>
                           ))
                         ) : (
-                          // Active State
+                           menuOptions.map((opt, idx) => (
+                             <button
+                               key={idx}
+                               onClick={opt.action}
+                               disabled={opt.disabled}
+                               className={`${opt.className} ${selectedIndex === idx ? 'selected' : ''}`}
+                               onMouseEnter={() => setSelectedIndex(idx)}
+                             >
+                               {opt.label}
+                             </button>
+                           ))
+                        )}
+                     </div>
+                  </div>
+               )}
+
+               {gameState === 'selectItem' || (gameState === 'selectTarget' && pendingAction?.type === 'どうぐ') ? (
+                  <div className={`item-window ${gameState === 'selectTarget' ? 'inactive' : ''}`}>
+                     <div className="item-list">
+                       {gameState === 'selectTarget' ? (
+                          // Inactive Item View
+                          party[currentCharacter].items.map((item, idx) => (
+                            <button
+                              key={idx}
+                              className={`item-button ${pendingAction.item.name === item.name ? 'selected' : ''}`}
+                              disabled={true}
+                            >
+                              {item.name}
+                            </button>
+                          ))
+                       ) : (
                           menuOptions.map((opt, idx) => (
                              <button
                                key={idx}
@@ -532,15 +746,48 @@ const DQ2SidohBattle = () => {
                                {opt.label}
                              </button>
                           ))
+                       )}
+                     </div>
+                  </div>
+               ) : null}
+
+               {/* Column 3: Spell List */}
+               {(gameState === 'selectSpell' || (gameState === 'selectTarget' && pendingAction?.type === 'じゅもん')) && (
+                  <div className={`spell-window ${gameState === 'selectTarget' ? 'inactive' : ''}`}>
+                     <div className="spell-list">
+                        {gameState === 'selectTarget' ? (
+                           // Inactive Spell View
+                           spells[currentCharacter].map((spell, idx) => (
+                             <button
+                               key={idx}
+                               className={`spell-button ${pendingAction.spell.name === spell.name ? 'selected' : ''}`}
+                               disabled={true}
+                             >
+                               <span className="spell-name">{spell.name}</span>
+                               <span className="spell-cost">MP {spell.mp}</span>
+                             </button>
+                           ))
+                        ) : (
+                           menuOptions.map((opt, idx) => (
+                             <button
+                               key={idx}
+                               onClick={opt.action}
+                               disabled={opt.disabled}
+                               className={`${opt.className} ${selectedIndex === idx ? 'selected' : ''}`}
+                               onMouseEnter={() => setSelectedIndex(idx)}
+                             >
+                               {opt.label}
+                             </button>
+                           ))
                         )}
                      </div>
                   </div>
                )}
 
-               {/* Spell Window - Visible only during selectSpell */}
-               {gameState === 'selectSpell' && (
-                  <div className="spell-window">
-                     <div className="spell-list">
+               {/* Column 3 or 4: Target Selection */}
+               {gameState === 'selectTarget' && (
+                  <div className="target-window">
+                     <div className="target-list">
                         {menuOptions.map((opt, idx) => (
                            <button
                              key={idx}
