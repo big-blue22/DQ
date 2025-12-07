@@ -62,10 +62,29 @@ def test_keyboard_navigation(page: Page):
     expect(page.locator("button", has_text="たたかう")).to_have_class(re.compile(r".*selected.*"))
     page.keyboard.press("Enter")
 
-    # Select "ぶきで こうげき" (first item)
-    page.keyboard.press("Space") # Test Space as confirm
+    # Select "ぶきで こうげき" (first item) for Character 1
+    page.keyboard.press("Space")
 
-    # Should trigger attack animation -> Text changes
+    # Character 2 Command Phase
+    # Should stay in command mode, Message Box should remain hidden (or not processing yet)
+    expect(page.locator(".command-window")).to_be_visible()
+
+    # Select "たたかう" -> "ぶきで こうげき" for Character 2
+    expect(page.locator("button", has_text="たたかう")).to_have_class(re.compile(r".*selected.*"))
+    page.keyboard.press("Enter")
+    expect(page.locator("button", has_text="ぶきで こうげき")).to_be_visible()
+    page.keyboard.press("Space")
+
+    # Character 3 Command Phase
+    expect(page.locator(".command-window")).to_be_visible()
+
+    # Select "たたかう" -> "ぶきで こうげき" for Character 3
+    expect(page.locator("button", has_text="たたかう")).to_have_class(re.compile(r".*selected.*"))
+    page.keyboard.press("Enter")
+    expect(page.locator("button", has_text="ぶきで こうげき")).to_be_visible()
+    page.keyboard.press("Space")
+
+    # NOW all commands are entered. Battle Phase starts.
     # Logic: "command" mode ends, message box appears
     expect(page.locator(".message-box")).to_be_visible()
     expect(page.locator(".message-text")).to_contain_text("の こうげき!")

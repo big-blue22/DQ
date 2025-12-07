@@ -199,6 +199,16 @@
   box-sizing: border-box;
 }
 
+.spell-window {
+  background-color: #000;
+  border: 3px solid #fff;
+  padding: 14px 20px;
+  box-shadow: inset 0 0 0 3px #000;
+  min-width: 240px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
 .command-grid,
 .submenu-list,
 .spell-list {
@@ -242,7 +252,8 @@
 }
 
 /* Specific override for active items in an inactive (disabled) window */
-.command-window.inactive button.selected:disabled {
+.command-window.inactive button.selected:disabled,
+.submenu-window.inactive button.selected:disabled {
   opacity: 1.0;
   cursor: default;
 }
