@@ -43,7 +43,16 @@ def test_message_window_visible_during_animation(page: Page):
     # Click start
     page.get_by_role("button", name="たたかう").click()
 
-    # Select 'にげる' (Run) to trigger an action immediately
+    # Select 'にげる' (Run) for Character 1
+    page.get_by_role("button", name="にげる").click()
+
+    # Select 'にげる' (Run) for Character 2
+    # Ensure we are ready for input
+    expect(page.get_by_role("button", name="にげる")).to_be_visible()
+    page.get_by_role("button", name="にげる").click()
+
+    # Select 'にげる' (Run) for Character 3
+    expect(page.get_by_role("button", name="にげる")).to_be_visible()
     page.get_by_role("button", name="にげる").click()
 
     # Now an action is executing (animating=true).

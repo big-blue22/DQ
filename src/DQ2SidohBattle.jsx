@@ -325,6 +325,17 @@ const DQ2SidohBattle = () => {
     { label: 'どうぐ', value: 'どうぐ' }
   ];
 
+  const getBattleActionOptions = (charIndex) => {
+    const opts = [
+      { label: 'ぶきで こうげき', value: 'attack', className: 'submenu-button' }
+    ];
+    if (party[charIndex].canUseMagic) {
+      opts.push({ label: 'じゅもん', value: 'spell', className: 'submenu-button' });
+    }
+    opts.push({ label: 'もどる', value: 'back', className: 'back-button' });
+    return opts;
+  };
+
   // Determine available menu options based on current game state
   const getMenuOptions = () => {
     if (!isCommandMode) return [];
@@ -339,14 +350,15 @@ const DQ2SidohBattle = () => {
           className: 'command-button'
         }));
       case 'selectAttackType':
-        const opts = [
-          { label: 'ぶきで こうげき', action: () => handleAttackType('ぶきで こうげき'), className: 'submenu-button' }
-        ];
-        if (party[currentCharacter].canUseMagic) {
-          opts.push({ label: 'じゅもん', action: () => handleAttackType('じゅもん'), className: 'submenu-button' });
-        }
-        opts.push({ label: 'もどる', action: () => setGameState('command'), className: 'back-button' });
-        return opts;
+        return getBattleActionOptions(currentCharacter).map(item => ({
+          label: item.label,
+          action: () => {
+            if (item.value === 'attack') handleAttackType('ぶきで こうげき');
+            else if (item.value === 'spell') handleAttackType('じゅもん');
+            else if (item.value === 'back') setGameState('command');
+          },
+          className: item.className
+        }));
       case 'selectSpell':
         const spellOpts = spells[currentCharacter].map(spell => ({
           label: (
@@ -492,10 +504,43 @@ const DQ2SidohBattle = () => {
                   </div>
                </div>
 
-               {/* Submenu Window - Only appears when active */}
+               {/* Submenu Window - Visible during selectAttackType OR selectSpell */}
                {isSubmenuActive && (
-                  <div className="submenu-window">
-                     <div className={gameState === 'selectSpell' ? "spell-list" : "submenu-list"}>
+                  <div className={`submenu-window ${gameState === 'selectSpell' ? 'inactive' : ''}`}>
+                     <div className="submenu-list">
+                        {gameState === 'selectSpell' ? (
+                          // Inactive State: Render fixed options
+                          getBattleActionOptions(currentCharacter).map((item, idx) => (
+                            <button
+                              key={idx}
+                              className={`${item.className} ${item.value === 'spell' ? 'selected' : ''}`}
+                              disabled={true}
+                            >
+                              {item.label}
+                            </button>
+                          ))
+                        ) : (
+                          // Active State
+                          menuOptions.map((opt, idx) => (
+                             <button
+                               key={idx}
+                               onClick={opt.action}
+                               disabled={opt.disabled}
+                               className={`${opt.className} ${selectedIndex === idx ? 'selected' : ''}`}
+                               onMouseEnter={() => setSelectedIndex(idx)}
+                             >
+                               {opt.label}
+                             </button>
+                          ))
+                        )}
+                     </div>
+                  </div>
+               )}
+
+               {/* Spell Window - Visible only during selectSpell */}
+               {gameState === 'selectSpell' && (
+                  <div className="spell-window">
+                     <div className="spell-list">
                         {menuOptions.map((opt, idx) => (
                            <button
                              key={idx}
