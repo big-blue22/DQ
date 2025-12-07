@@ -279,3 +279,98 @@
 .spell-cost {
   margin-left: 16px;
 }
+
+/* Item Window */
+.item-window {
+  background-color: #000;
+  border: 3px solid #fff;
+  padding: 14px 20px;
+  box-shadow: inset 0 0 0 3px #000;
+  min-width: 220px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.item-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.item-button {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 17px;
+  font-family: 'DotGothic16', 'MS Gothic', 'ＭＳ ゴシック', monospace;
+  cursor: pointer;
+  text-align: left;
+  padding: 6px 12px;
+  position: relative;
+  letter-spacing: 0.08em;
+  font-weight: normal;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.item-button:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+
+.item-button.selected::before {
+  content: '▶';
+  position: absolute;
+  left: -12px;
+}
+
+/* Target Window */
+.target-window {
+  background-color: #000;
+  border: 3px solid #fff;
+  padding: 14px 20px;
+  box-shadow: inset 0 0 0 3px #000;
+  min-width: 180px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.target-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.target-button {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 17px;
+  font-family: 'DotGothic16', 'MS Gothic', 'ＭＳ ゴシック', monospace;
+  cursor: pointer;
+  text-align: left;
+  padding: 6px 12px;
+  position: relative;
+  letter-spacing: 0.08em;
+  font-weight: normal;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.target-button:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+
+.target-button.selected::before {
+  content: '▶';
+  position: absolute;
+  left: -12px;
+}
+
+/* Specific override for active items in an inactive (disabled) window */
+.item-window.inactive button.selected:disabled,
+.target-window.inactive button.selected:disabled {
+  opacity: 1.0;
+  cursor: default;
+}

@@ -65,6 +65,11 @@ def test_keyboard_navigation(page: Page):
     # Select "ぶきで こうげき" (first item) for Character 1
     page.keyboard.press("Space")
 
+    # Select Target for Character 1 (Sidoh)
+    expect(page.locator(".target-window")).to_be_visible()
+    expect(page.locator("button", has_text="シドー")).to_have_class(re.compile(r".*selected.*"))
+    page.keyboard.press("Space")
+
     # Character 2 Command Phase
     # Should stay in command mode, Message Box should remain hidden (or not processing yet)
     expect(page.locator(".command-window")).to_be_visible()
@@ -75,6 +80,11 @@ def test_keyboard_navigation(page: Page):
     expect(page.locator("button", has_text="ぶきで こうげき")).to_be_visible()
     page.keyboard.press("Space")
 
+    # Select Target for Character 2 (Sidoh)
+    expect(page.locator(".target-window")).to_be_visible()
+    expect(page.locator("button", has_text="シドー")).to_have_class(re.compile(r".*selected.*"))
+    page.keyboard.press("Space")
+
     # Character 3 Command Phase
     expect(page.locator(".command-window")).to_be_visible()
 
@@ -82,6 +92,11 @@ def test_keyboard_navigation(page: Page):
     expect(page.locator("button", has_text="たたかう")).to_have_class(re.compile(r".*selected.*"))
     page.keyboard.press("Enter")
     expect(page.locator("button", has_text="ぶきで こうげき")).to_be_visible()
+    page.keyboard.press("Space")
+
+    # Select Target for Character 3 (Sidoh)
+    expect(page.locator(".target-window")).to_be_visible()
+    expect(page.locator("button", has_text="シドー")).to_have_class(re.compile(r".*selected.*"))
     page.keyboard.press("Space")
 
     # NOW all commands are entered. Battle Phase starts.
