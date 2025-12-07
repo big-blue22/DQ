@@ -11,16 +11,18 @@ const DQ2SidohBattle = () => {
   const [selectedCommand, setSelectedCommand] = useState(null);
   const [selectedSpell, setSelectedSpell] = useState(null);
   const [animating, setAnimating] = useState(false);
+  const [commandQueue, setCommandQueue] = useState([]);
+  const [battleQueue, setBattleQueue] = useState([]);
 
   // Keyboard Navigation State
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const [party, setParty] = useState([
-    { name: 'ローレシア', level: 44, hp: 189, maxHp: 189, mp: 31, maxMp: 31, atk: 120, def: 80, status: 'normal', canUseMagic: false },
-    { name: 'サマルトリア', level: 31, hp: 159, maxHp: 159, mp: 93, maxMp: 93, atk: 90, def: 70, status: 'normal', canUseMagic: true },
-    { name: 'ムーンブルク', level: 28, hp: 105, maxHp: 105, mp: 115, maxMp: 115, atk: 60, def: 50, status: 'normal', canUseMagic: true }
+    { name: 'ローレシア', level: 44, hp: 189, maxHp: 189, mp: 31, maxMp: 31, atk: 120, def: 80, agi: 70, status: 'normal', canUseMagic: false },
+    { name: 'サマルトリア', level: 31, hp: 159, maxHp: 159, mp: 93, maxMp: 93, atk: 90, def: 70, agi: 110, status: 'normal', canUseMagic: true },
+    { name: 'ムーンブルク', level: 28, hp: 105, maxHp: 105, mp: 115, maxMp: 115, atk: 60, def: 50, agi: 140, status: 'normal', canUseMagic: true }
   ]);
-  const [sidoh, setSidoh] = useState({ name: 'シドー', hp: 2000, maxHp: 2000, atk: 180, def: 120, status: 'normal' });
+  const [sidoh, setSidoh] = useState({ name: 'シドー', hp: 2000, maxHp: 2000, atk: 180, def: 120, agi: 90, status: 'normal' });
   const [isSidohDamaged, setIsSidohDamaged] = useState(false);
 
   // バックグラウンド音声再生（ループ）
@@ -43,18 +45,32 @@ const DQ2SidohBattle = () => {
     ]
   };
 
+  const registerCommand = (command, spell = null) => {
+    const newQueue = [...commandQueue, {
+      type: command,
+      spell: spell,
+      actorIndex: currentCharacter
+    }];
+    setCommandQueue(newQueue);
+
+    if (currentCharacter < 2) {
+      setCurrentCharacter(currentCharacter + 1);
+      setGameState('command');
+      setSelectedCommand(null);
+      setSelectedSpell(null);
+    } else {
+      startBattlePhase(newQueue);
+    }
+  };
+
   const handleCommand = (command) => {
     if (animating) return;
     setSelectedCommand(command);
 
     if (command === 'たたかう') {
       setGameState('selectAttackType');
-    } else if (command === 'どうぐ') {
-      executeCommand('どうぐ');
-    } else if (command === 'にげる') {
-      executeCommand('にげる');
-    } else {
-      executeCommand(command);
+    } else if (command === 'どうぐ' || command === 'にげる' || command === 'ぼうぎょ') {
+      registerCommand(command);
     }
   };
 
@@ -62,7 +78,7 @@ const DQ2SidohBattle = () => {
     if (animating) return;
     
     if (type === 'ぶきで こうげき') {
-      executeCommand('たたかう');
+      registerCommand('たたかう');
     } else if (type === 'じゅもん') {
       setGameState('selectSpell');
     }
@@ -71,155 +87,209 @@ const DQ2SidohBattle = () => {
   const handleSpell = (spell) => {
     if (animating) return;
     setSelectedSpell(spell);
-    executeCommand('じゅもん', spell);
+    registerCommand('じゅもん', spell);
   };
 
-  const executeCommand = (command, spell = null) => {
-    setAnimating(true);
-    const char = party[currentCharacter];
-    if (char.status === 'dead') {
-      setMessage(`${char.name}は しんでいる!`);
-      setTimeout(() => nextTurn(), 1500);
+  const startBattlePhase = (finalCommandQueue) => {
+    setGameState('processingTurn');
+
+    let battlers = [];
+
+    // Add party actions
+    finalCommandQueue.forEach((cmd) => {
+      battlers.push({
+        isEnemy: false,
+        index: cmd.actorIndex,
+        speed: party[cmd.actorIndex].agi * (0.5 + Math.random() * 0.5),
+        action: cmd
+      });
+    });
+
+    // Add Sidoh
+    battlers.push({
+      isEnemy: true,
+      index: -1,
+      speed: sidoh.agi * (0.5 + Math.random() * 0.5),
+      action: { type: 'decide_ai' }
+    });
+
+    // Sort descending speed
+    battlers.sort((a, b) => b.speed - a.speed);
+
+    setBattleQueue(battlers);
+  };
+
+  // Effect for processing turn
+  useEffect(() => {
+    if (gameState !== 'processingTurn') return;
+    if (animating) return;
+
+    if (battleQueue.length === 0) {
+      // End of turn
+      setTurn(prev => prev + 1);
+      setCommandQueue([]);
+      setCurrentCharacter(0);
+      setGameState('command');
+      setSelectedCommand(null);
+      setSelectedSpell(null);
       return;
     }
+
+    const currentBattler = battleQueue[0];
+    performAction(currentBattler);
+
+  }, [gameState, battleQueue, animating]);
+
+  const performAction = (battler) => {
+    setAnimating(true);
 
     let msg = '';
     let newParty = JSON.parse(JSON.stringify(party));
     let newSidoh = { ...sidoh };
+    let battleOver = false;
 
-    if (command === 'たたかう') {
-      const damage = Math.floor(Math.random() * 40) + char.atk - 60;
-      const actualDamage = Math.max(1, damage);
-      newSidoh.hp = Math.max(0, newSidoh.hp - actualDamage);
-      msg = `${char.name}の こうげき!\n${sidoh.name}に ${actualDamage}の ダメージ!`;
-      setIsSidohDamaged(true);
-      setTimeout(() => setIsSidohDamaged(false), 500);
-    } else if (command === 'どうぐ') {
-      msg = `${char.name}は どうぐを つかった!\n\nしかし なにも おこらなかった`;
-    } else if (command === 'にげる') {
-      msg = `${char.name}は にげだした!\n\nしかし まわりこまれてしまった!`;
-    } else if (command === 'じゅもん' && spell) {
-      if (char.mp < spell.mp) {
-        msg = 'MPが たりない!';
+    // Check if actor is dead (if party member)
+    if (!battler.isEnemy && newParty[battler.index].status === 'dead') {
+      // Skip turn, but maybe show message? "X is dead" usually doesn't show in DQ if already dead.
+      // We just skip.
+      setTimeout(() => {
+        setBattleQueue(prev => prev.slice(1));
+        setAnimating(false);
+      }, 500); // Short delay
+      return;
+    }
+
+    // Check if Sidoh is dead (if actor is Sidoh, he can't act)
+    if (battler.isEnemy && newSidoh.hp <= 0) {
+       // Battle is already won, loop should have stopped or will stop.
+       // Skip.
+       setTimeout(() => {
+         setBattleQueue(prev => prev.slice(1));
+         setAnimating(false);
+       }, 500);
+       return;
+    }
+
+    // --- Action Execution ---
+    if (battler.isEnemy) {
+      // Sidoh's AI
+      const aliveParty = newParty.filter(p => p.status !== 'dead');
+      if (aliveParty.length === 0) {
+         // Should have been Game Over already, but just in case
+         battleOver = true;
+         setGameState('gameover');
       } else {
-        newParty[currentCharacter].mp -= spell.mp;
-        if (spell.type === 'attack') {
-          const damage = Math.floor(Math.random() * 30) + spell.power;
-          newSidoh.hp = Math.max(0, newSidoh.hp - damage);
-          msg = `${char.name}は ${spell.name}を となえた!\n${sidoh.name}に ${damage}の ダメージ!`;
-          setIsSidohDamaged(true);
-          setTimeout(() => setIsSidohDamaged(false), 500);
-        } else if (spell.type === 'heal') {
-          const target = newParty.find(p => p.hp > 0 && p.hp < p.maxHp);
-          if (target) {
-            const heal = Math.min(spell.power, target.maxHp - target.hp);
-            target.hp += heal;
-            msg = `${char.name}は ${spell.name}を となえた!\n${target.name}の HPが ${heal} かいふくした!`;
-          } else {
-            msg = `${char.name}は ${spell.name}を となえた!\nしかし こうかが なかった!`;
-          }
-        } else if (spell.type === 'revive') {
-          const deadChar = newParty.find(p => p.status === 'dead');
-          if (deadChar) {
-            if (Math.random() > 0.5 || spell.name === 'ザオリク') {
-              deadChar.status = 'normal';
-              deadChar.hp = Math.floor(deadChar.maxHp / 2);
-              msg = `${char.name}は ${spell.name}を となえた!\n${deadChar.name}は いきかえった!`;
-            } else {
-              msg = `${char.name}は ${spell.name}を となえた!\nしかし こうかが なかった!`;
-            }
-          } else {
-            msg = `${char.name}は ${spell.name}を となえた!\nしかし こうかが なかった!`;
-          }
-        } else if (spell.type === 'buff') {
-          newParty[currentCharacter].atk = Math.floor(newParty[currentCharacter].atk * 1.3);
-          msg = `${char.name}は ${spell.name}を となえた!\n${char.name}の こうげきりょくが あがった!`;
-        }
+         const target = aliveParty[Math.floor(Math.random() * aliveParty.length)];
+         const targetIndex = newParty.findIndex(p => p.name === target.name);
+         const action = Math.random();
+
+         if (action < 0.3) {
+           const damage = Math.floor(Math.random() * 60) + 80;
+           newParty[targetIndex].hp = Math.max(0, newParty[targetIndex].hp - damage);
+           msg = `シドーの はげしいほのお!\n${target.name}は ${damage}の ダメージを うけた!`;
+         } else if (action < 0.5) {
+           const damage = Math.floor(Math.random() * 40) + 120;
+           newParty[targetIndex].hp = Math.max(0, newParty[targetIndex].hp - damage);
+           msg = `シドーの つうこんのいちげき!\n${target.name}は ${damage}の ダメージを うけた!`;
+         } else {
+           const damage = Math.floor(Math.random() * 50) + 60;
+           newParty[targetIndex].hp = Math.max(0, newParty[targetIndex].hp - damage);
+           msg = `シドーの こうげき!\n${target.name}は ${damage}の ダメージを うけた!`;
+         }
+
+         if (newParty[targetIndex].hp === 0) {
+           newParty[targetIndex].status = 'dead';
+           msg += `\n${target.name}は しんでしまった!`;
+         }
       }
-    } else if (command === 'ぼうぎょ') {
-      msg = `${char.name}は みをまもっている`;
+    } else {
+      // Party Action
+      const cmd = battler.action;
+      const char = newParty[battler.index];
+
+      if (cmd.type === 'たたかう') {
+         const damage = Math.floor(Math.random() * 40) + char.atk - 60;
+         const actualDamage = Math.max(1, damage);
+         newSidoh.hp = Math.max(0, newSidoh.hp - actualDamage);
+         msg = `${char.name}の こうげき!\n${sidoh.name}に ${actualDamage}の ダメージ!`;
+         setIsSidohDamaged(true);
+         setTimeout(() => setIsSidohDamaged(false), 500);
+      } else if (cmd.type === 'どうぐ') {
+         msg = `${char.name}は どうぐを つかった!\n\nしかし なにも おこらなかった`;
+      } else if (cmd.type === 'にげる') {
+         msg = `${char.name}は にげだした!\n\nしかし まわりこまれてしまった!`;
+      } else if (cmd.type === 'じゅもん' && cmd.spell) {
+         const spell = cmd.spell;
+         if (char.mp < spell.mp) {
+           msg = 'MPが たりない!';
+         } else {
+           newParty[battler.index].mp -= spell.mp;
+           if (spell.type === 'attack') {
+             const damage = Math.floor(Math.random() * 30) + spell.power;
+             newSidoh.hp = Math.max(0, newSidoh.hp - damage);
+             msg = `${char.name}は ${spell.name}を となえた!\n${sidoh.name}に ${damage}の ダメージ!`;
+             setIsSidohDamaged(true);
+             setTimeout(() => setIsSidohDamaged(false), 500);
+           } else if (spell.type === 'heal') {
+             const target = newParty.find(p => p.hp > 0 && p.hp < p.maxHp);
+             if (target) {
+               const heal = Math.min(spell.power, target.maxHp - target.hp);
+               target.hp += heal;
+               msg = `${char.name}は ${spell.name}を となえた!\n${target.name}の HPが ${heal} かいふくした!`;
+             } else {
+               msg = `${char.name}は ${spell.name}を となえた!\nしかし こうかが なかった!`;
+             }
+           } else if (spell.type === 'revive') {
+             const deadChar = newParty.find(p => p.status === 'dead');
+             if (deadChar) {
+               if (Math.random() > 0.5 || spell.name === 'ザオリク') {
+                 deadChar.status = 'normal';
+                 deadChar.hp = Math.floor(deadChar.maxHp / 2);
+                 msg = `${char.name}は ${spell.name}を となえた!\n${deadChar.name}は いきかえった!`;
+               } else {
+                 msg = `${char.name}は ${spell.name}を となえた!\nしかし こうかが なかった!`;
+               }
+             } else {
+               msg = `${char.name}は ${spell.name}を となえた!\nしかし こうかが なかった!`;
+             }
+           } else if (spell.type === 'buff') {
+             newParty[battler.index].atk = Math.floor(newParty[battler.index].atk * 1.3);
+             msg = `${char.name}は ${spell.name}を となえた!\n${char.name}の こうげきりょくが あがった!`;
+           }
+         }
+      } else if (cmd.type === 'ぼうぎょ') {
+         msg = `${char.name}は みをまもっている`;
+      }
     }
 
     setParty(newParty);
     setSidoh(newSidoh);
     setMessage(msg);
 
+    // After action delay
     setTimeout(() => {
-      if (newSidoh.hp <= 0) {
-        setMessage('シドーを たおした!\n\nせかいに へいわが おとずれた・・・');
-        setGameState('victory');
-        setAnimating(false);
-      } else {
-        nextTurn();
-      }
+       // Check End Conditions
+       if (newSidoh.hp <= 0) {
+         setMessage('シドーを たおした!\n\nせかいに へいわが おとずれた・・・');
+         setGameState('victory');
+         setBattleQueue([]); // Clear queue
+         setAnimating(false);
+         return;
+       }
+
+       const stillAlive = newParty.filter(p => p.status !== 'dead');
+       if (stillAlive.length === 0) {
+         setMessage('パーティは ぜんめつした・・・');
+         setGameState('gameover');
+         setBattleQueue([]);
+         setAnimating(false);
+         return;
+       }
+
+       // Proceed to next action
+       setBattleQueue(prev => prev.slice(1));
+       setAnimating(false);
     }, 2000);
-  };
-
-  const nextTurn = () => {
-    if (currentCharacter < 2) {
-      setCurrentCharacter(currentCharacter + 1);
-      setGameState('command');
-      setSelectedCommand(null);
-      setSelectedSpell(null);
-      setAnimating(false);
-    } else {
-      enemyTurn();
-    }
-  };
-
-  const enemyTurn = () => {
-    setTimeout(() => {
-      let newParty = JSON.parse(JSON.stringify(party));
-      const aliveParty = newParty.filter(p => p.status !== 'dead');
-
-      if (aliveParty.length === 0) {
-        setMessage('パーティは ぜんめつした・・・');
-        setGameState('gameover');
-        setAnimating(false);
-        return;
-      }
-
-      const target = aliveParty[Math.floor(Math.random() * aliveParty.length)];
-      const targetIndex = newParty.findIndex(p => p.name === target.name);
-      
-      const action = Math.random();
-      let msg = '';
-
-      if (action < 0.3) {
-        const damage = Math.floor(Math.random() * 60) + 80;
-        newParty[targetIndex].hp = Math.max(0, newParty[targetIndex].hp - damage);
-        msg = `シドーの はげしいほのお!\n${target.name}は ${damage}の ダメージを うけた!`;
-      } else if (action < 0.5) {
-        const damage = Math.floor(Math.random() * 40) + 120;
-        newParty[targetIndex].hp = Math.max(0, newParty[targetIndex].hp - damage);
-        msg = `シドーの つうこんのいちげき!\n${target.name}は ${damage}の ダメージを うけた!`;
-      } else {
-        const damage = Math.floor(Math.random() * 50) + 60;
-        newParty[targetIndex].hp = Math.max(0, newParty[targetIndex].hp - damage);
-        msg = `シドーの こうげき!\n${target.name}は ${damage}の ダメージを うけた!`;
-      }
-
-      if (newParty[targetIndex].hp === 0) {
-        newParty[targetIndex].status = 'dead';
-        msg += `\n${target.name}は しんでしまった!`;
-      }
-
-      setParty(newParty);
-      setMessage(msg);
-
-      setTimeout(() => {
-        const stillAlive = newParty.filter(p => p.status !== 'dead');
-        if (stillAlive.length === 0) {
-          setMessage('パーティは ぜんめつした・・・');
-          setGameState('gameover');
-        } else {
-          setCurrentCharacter(0);
-          setGameState('command');
-          setTurn(turn + 1);
-        }
-        setAnimating(false);
-      }, 2500);
-    }, 1000);
   };
 
   const startGame = () => {
@@ -230,16 +300,18 @@ const DQ2SidohBattle = () => {
 
   const restartGame = () => {
     setParty([
-      { name: 'ローレシア', level: 44, hp: 189, maxHp: 189, mp: 31, maxMp: 31, atk: 120, def: 80, status: 'normal', canUseMagic: false },
-      { name: 'サマルトリア', level: 31, hp: 159, maxHp: 159, mp: 93, maxMp: 93, atk: 90, def: 70, status: 'normal', canUseMagic: true },
-      { name: 'ムーンブルク', level: 28, hp: 105, maxHp: 105, mp: 115, maxMp: 115, atk: 60, def: 50, status: 'normal', canUseMagic: true }
+      { name: 'ローレシア', level: 44, hp: 189, maxHp: 189, mp: 31, maxMp: 31, atk: 120, def: 80, agi: 70, status: 'normal', canUseMagic: false },
+      { name: 'サマルトリア', level: 31, hp: 159, maxHp: 159, mp: 93, maxMp: 93, atk: 90, def: 70, agi: 110, status: 'normal', canUseMagic: true },
+      { name: 'ムーンブルク', level: 28, hp: 105, maxHp: 105, mp: 115, maxMp: 115, atk: 60, def: 50, agi: 140, status: 'normal', canUseMagic: true }
     ]);
-    setSidoh({ name: 'シドー', hp: 2000, maxHp: 2000, atk: 180, def: 120, status: 'normal' });
+    setSidoh({ name: 'シドー', hp: 2000, maxHp: 2000, atk: 180, def: 120, agi: 90, status: 'normal' });
     setCurrentCharacter(0);
     setTurn(0);
     setGameState('intro');
     setMessage('はかいしん シドーが あらわれた!');
     setAnimating(false);
+    setCommandQueue([]);
+    setBattleQueue([]);
     pause(); // 音声を一時停止してリセット
   };
 
@@ -332,8 +404,15 @@ const DQ2SidohBattle = () => {
           break;
         case 'Escape':
         case 'Backspace':
-          if (gameState === 'selectAttackType') setGameState('command');
-          if (gameState === 'selectSpell') setGameState('selectAttackType');
+          if (gameState === 'selectAttackType') {
+            setGameState('command');
+          } else if (gameState === 'selectSpell') {
+            setGameState('selectAttackType');
+          } else if (gameState === 'command' && currentCharacter > 0) {
+            setCurrentCharacter(prev => prev - 1);
+            setCommandQueue(prev => prev.slice(0, -1));
+            setSelectedIndex(0);
+          }
           break;
         default:
           break;
