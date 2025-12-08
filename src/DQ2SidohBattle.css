@@ -253,7 +253,8 @@
 
 /* Specific override for active items in an inactive (disabled) window */
 .command-window.inactive button.selected:disabled,
-.submenu-window.inactive button.selected:disabled {
+.submenu-window.inactive button.selected:disabled,
+.spell-window.inactive button.selected:disabled {
   opacity: 1.0;
   cursor: default;
 }
