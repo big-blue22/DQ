@@ -155,6 +155,8 @@ const DQ2SidohBattle = () => {
     if (battleQueue.length === 0) {
       // End of turn
       setTurn(prev => prev + 1);
+      // Reset defending status for all party members
+      setParty(prevParty => prevParty.map(p => ({ ...p, isDefending: false })));
       setCommandQueue([]);
       setCurrentCharacter(0);
       setGameState('command');
@@ -212,19 +214,30 @@ const DQ2SidohBattle = () => {
          const targetIndex = newParty.findIndex(p => p.name === target.name);
          const action = Math.random();
 
+         let damage = 0;
+         let attackName = '';
+
          if (action < 0.3) {
-           const damage = Math.floor(Math.random() * 60) + 80;
-           newParty[targetIndex].hp = Math.max(0, newParty[targetIndex].hp - damage);
-           msg = `シドーの はげしいほのお!\n${target.name}は ${damage}の ダメージを うけた!`;
+           damage = Math.floor(Math.random() * 60) + 80;
+           attackName = 'はげしいほのお';
+           msg = `シドーの ${attackName}!\n`;
          } else if (action < 0.5) {
-           const damage = Math.floor(Math.random() * 40) + 120;
-           newParty[targetIndex].hp = Math.max(0, newParty[targetIndex].hp - damage);
-           msg = `シドーの つうこんのいちげき!\n${target.name}は ${damage}の ダメージを うけた!`;
+           damage = Math.floor(Math.random() * 40) + 120;
+           attackName = 'つうこんのいちげき';
+           msg = `シドーの ${attackName}!\n`;
          } else {
-           const damage = Math.floor(Math.random() * 50) + 60;
-           newParty[targetIndex].hp = Math.max(0, newParty[targetIndex].hp - damage);
-           msg = `シドーの こうげき!\n${target.name}は ${damage}の ダメージを うけた!`;
+           damage = Math.floor(Math.random() * 50) + 60;
+           attackName = 'こうげき';
+           msg = `シドーの ${attackName}!\n`;
          }
+
+         // Check for defending status
+         if (newParty[targetIndex].isDefending) {
+            damage = Math.floor(damage / 2);
+         }
+
+         newParty[targetIndex].hp = Math.max(0, newParty[targetIndex].hp - damage);
+         msg += `${target.name}は ${damage}の ダメージを うけた!`;
 
          if (newParty[targetIndex].hp === 0) {
            newParty[targetIndex].status = 'dead';
@@ -371,7 +384,10 @@ const DQ2SidohBattle = () => {
            }
          }
       } else if (cmd.type === 'ぼうぎょ') {
-         msg = `${char.name}は みをまもっている`;
+         const recoveredMp = Math.min(10, char.maxMp - char.mp);
+         newParty[battler.index].mp += recoveredMp;
+         newParty[battler.index].isDefending = true;
+         msg = `${char.name}は みをまもっている\nMPが ${recoveredMp} かいふくした!`;
       }
     }
 
