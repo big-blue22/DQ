@@ -96,6 +96,7 @@ const DQ2SidohBattle = () => {
       setPendingAction({ type: 'たたかう', subtype: 'attack' });
       setGameState('selectTarget');
     } else if (type === 'じゅもん') {
+      setPendingAction(null);
       setGameState('selectSpell');
     }
   };
@@ -712,7 +713,7 @@ const DQ2SidohBattle = () => {
                             <button
                               key={idx}
                               className={`${item.className} ${
-                                (item.value === 'spell' && pendingAction?.type === 'じゅもん') || (item.value === 'attack' && pendingAction?.type === 'たたかう') ? 'selected' : ''
+                                (item.value === 'spell' && (pendingAction?.type === 'じゅもん' || gameState === 'selectSpell')) || (item.value === 'attack' && pendingAction?.type === 'たたかう') ? 'selected' : ''
                               }`}
                               disabled={true}
                             >
