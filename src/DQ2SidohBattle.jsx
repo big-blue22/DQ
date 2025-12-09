@@ -55,6 +55,24 @@ const DQ2SidohBattle = () => {
     ]
   };
 
+  const getNextLivingCharacterIndex = (startIndex, currentParty) => {
+    for (let i = startIndex + 1; i < currentParty.length; i++) {
+      if (currentParty[i].status !== 'dead') {
+        return i;
+      }
+    }
+    return -1;
+  };
+
+  const getPrevLivingCharacterIndex = (startIndex, currentParty) => {
+    for (let i = startIndex - 1; i >= 0; i--) {
+      if (currentParty[i].status !== 'dead') {
+        return i;
+      }
+    }
+    return -1;
+  };
+
   const registerCommand = (command, spell = null, item = null, target = null) => {
     const newQueue = [...commandQueue, {
       type: command,
@@ -65,8 +83,10 @@ const DQ2SidohBattle = () => {
     }];
     setCommandQueue(newQueue);
 
-    if (currentCharacter < 2) {
-      setCurrentCharacter(currentCharacter + 1);
+    const nextIndex = getNextLivingCharacterIndex(currentCharacter, party);
+
+    if (nextIndex !== -1) {
+      setCurrentCharacter(nextIndex);
       setGameState('command');
       setSelectedCommand(null);
       setSelectedSpell(null);
@@ -159,7 +179,10 @@ const DQ2SidohBattle = () => {
       // Reset defending status for all party members
       setParty(prevParty => prevParty.map(p => ({ ...p, isDefending: false })));
       setCommandQueue([]);
-      setCurrentCharacter(0);
+
+      const nextChar = getNextLivingCharacterIndex(-1, party);
+      setCurrentCharacter(nextChar !== -1 ? nextChar : 0);
+
       setGameState('command');
       setSelectedCommand(null);
       setSelectedSpell(null);
@@ -170,7 +193,7 @@ const DQ2SidohBattle = () => {
     const currentBattler = battleQueue[0];
     performAction(currentBattler);
 
-  }, [gameState, battleQueue, animating]);
+  }, [gameState, battleQueue, animating, party]);
 
   const performAction = (battler) => {
     setAnimating(true);
@@ -609,8 +632,9 @@ const DQ2SidohBattle = () => {
             setGameState('command');
           } else if (gameState === 'selectSpell') {
             setGameState('selectAttackType');
-          } else if (gameState === 'command' && currentCharacter > 0) {
-            setCurrentCharacter(prev => prev - 1);
+          } else if (gameState === 'command' && getPrevLivingCharacterIndex(currentCharacter, party) !== -1) {
+            const prevIndex = getPrevLivingCharacterIndex(currentCharacter, party);
+            setCurrentCharacter(prevIndex);
             setCommandQueue(prev => prev.slice(0, -1));
             setSelectedIndex(0);
           }
